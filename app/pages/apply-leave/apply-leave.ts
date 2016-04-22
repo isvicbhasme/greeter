@@ -25,6 +25,9 @@ export class ApplyLeavePage  {
   }
   
   public showPopup() {
+    /*
+     * Ionic cordova plugin
+     */
     // DatePicker.show({
     //   date: this.getNextSundayAsDate(),
     //   mode: 'date',
@@ -43,6 +46,11 @@ export class ApplyLeavePage  {
     //     console.log(error);
     //   }
     // )
+    
+    /*
+     * The below is the equivalent of the above ionic-cordova-plugin which works as expected.
+     * Comment out the below code and uncomment the above for testing ionic-cordova-plugin
+     */
     let prompt = Alert.create({
       title: 'Take-off on...',
       inputs: [
