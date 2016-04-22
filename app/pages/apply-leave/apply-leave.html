@@ -1,0 +1,27 @@
+<ion-navbar *navbar>
+  <button menuToggle>
+    <ion-icon name="menu"></ion-icon>
+  </button>
+  <ion-title>Leaves</ion-title>
+</ion-navbar>
+
+<ion-content>
+  <ion-list>
+    <ion-item *ngFor="#leave of leaves">
+      <h2>{{leave.date | date: 'dd/MMM/yyyy'}}</h2>
+      <h3>{{leave.reason}}</h3>
+      <button clear item-right (click)="revokeLeave(leave)">
+        <ion-icon name="trash"></ion-icon>
+      </button>
+    </ion-item> 
+  </ion-list>
+</ion-content>
+  
+<ion-toolbar position="bottom">
+  <ion-input placeholder="Enter reason for taking-off" type="text" [(ngModel)]="takeOff.reason"></ion-input>
+  <ion-buttons end>
+    <button primary (click)="showPopup()">
+      <ion-icon name="send"></ion-icon>
+    </button>
+  </ion-buttons>
+</ion-toolbar>
