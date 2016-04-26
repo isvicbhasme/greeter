@@ -1,16 +1,24 @@
 <ion-content>
   <ion-list>
     
-    <ion-item>
-      <ion-label floating>Username</ion-label>
-      <ion-input type="text" #username></ion-input>
-    </ion-item>
-    
-    <ion-item>
-      <ion-label floating>Password</ion-label>
-      <ion-input type="password" #password></ion-input>
-    </ion-item>
-    
-    <button (click)="login(username.value, password.value)">Submit</button>
+    <form [ngFormModel]="authForm" (ngSubmit)="login(authForm.value)">
+      <ion-item [class.error]="!username.valid && username.touched">
+        <ion-label floating>Username</ion-label>
+        <ion-input type="text" [ngFormControl]="username" value=""></ion-input>
+      </ion-item>
+      <div *ngIf="username.hasError('required') && username.touched" class="error-box">* Username is required </div> 
+      <div *ngIf="username.hasError('minlength') && username.touched" class="error-box">* Minimum username length is {{minUsernameLen}} </div> 
+      <div *ngIf="username.hasError('maxlength') && username.touched" class="error-box">* Maximum username length is {{maxUsernameLen}} </div> 
+      
+      <ion-item [class.error]="!password.valid && password.touched">
+        <ion-label floating>Password</ion-label>
+        <ion-input type="password" [ngFormControl]="password"></ion-input>
+      </ion-item>
+      <div *ngIf="password.hasError('required') && password.touched" class="error-box">* Password is required </div>
+      <div *ngIf="password.hasError('minlength') && password.touched" class="error-box">* Minimum password length is {{minPasswordLen}} </div> 
+      <div *ngIf="password.hasError('maxlength') && password.touched" class="error-box">* Maximum password length is {{maxPasswordLen}} </div> 
+      
+      <button [disabled]="!authForm.valid" (click)="login(username.value, password.value)">Submit</button>
+    </form>
   </ion-list>
 </ion-content>
