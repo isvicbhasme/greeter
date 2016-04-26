@@ -1,5 +1,6 @@
 import {Page, Alert, NavController} from 'ionic-angular';
 import {DatePicker} from 'ionic-native';
+import {NgZone} from 'angular2/core';
 
 @Page({
   templateUrl: 'build/pages/apply-leave/apply-leave.html'
@@ -9,9 +10,9 @@ export class ApplyLeavePage  {
   leaves: Array<{reason: string, date: number}>; 
   takeOff: {reason: string, date: number};
   
-  constructor(private nav: NavController) {
+  constructor(private nav: NavController, private zone: NgZone) {
     this.leaves = [];
-    this.takeOff = {reason: "", date: this.getTodaysDateInMilliSec()};
+    this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
   }
   
   public revokeLeave(leave: {reason: string, date: number}) {
@@ -25,54 +26,55 @@ export class ApplyLeavePage  {
   }
   
   public showPopup() {
-    // DatePicker.show({
-    //   date: this.getNextSundayAsDate(),
-    //   mode: 'date',
-    //   titleText: 'Take-off on...',
-    //   todayText: 'Today'
-    // }).then(
-    //   date => {
-    //     console.log(date);
-    //     if(date != null) {
-    //       this.takeOff.date = date.getTime();
-    //       console.log("Calling addLeaveToList() "+ JSON.stringify(this.takeOff));
-    //       this.addLeaveToList();
-    //     }
-    //   },
-    //   error => {
-    //     console.log(error);
-    //   }
-    // )
-    let prompt = Alert.create({
-      title: 'Take-off on...',
-      inputs: [
-        {
-          name: 'value', // this is passed in handler
-          type: 'date',
-          value: this.getNextSundayAsMilliSec()
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          handler: (data) => {
-            console.log('Cancel clicked');
-          }
-        },
-        {
-          text: 'Save',
-          handler: (data) => {
-            let dateString: string[] = data.value.split("-");
-            if(dateString != null && dateString.length == 3) {
-              let date: Date = new Date(Number(dateString[0]), Number(dateString[1]) - 1, Number(dateString[2]));
-              this.takeOff.date = date.getTime();
-              this.addLeaveToList();
-            }
-          }
+    DatePicker.show({
+      date: this.getNextSundayAsDate(),
+      mode: 'date',
+      titleText: 'Take-off on...',
+      todayText: 'Today',
+      androidTheme: 3 // THEME_HOLO_LIGHT
+    }).then(
+      date => {
+        console.log(date);
+        if(date != null) {
+          this.takeOff.date = date.getTime();
+          console.log("Calling addLeaveToList() "+ JSON.stringify(this.takeOff));
+          this.zone.run(() => this.addLeaveToList());
         }
-      ]
-    });
-    this.nav.present(prompt);
+      },
+      error => {
+        console.log(error);
+      }
+    )
+    // let prompt = Alert.create({
+    //   title: 'Take-off on...',
+    //   inputs: [
+    //     {
+    //       name: 'value', // this is passed in handler
+    //       type: 'date',
+    //       value: this.getNextSundayAsMilliSec()
+    //     },
+    //   ],
+    //   buttons: [
+    //     {
+    //       text: 'Cancel',
+    //       handler: (data) => {
+    //         console.log('Cancel clicked');
+    //       }
+    //     },
+    //     {
+    //       text: 'Save',
+    //       handler: (data) => {
+    //         let dateString: string[] = data.value.split("-");
+    //         if(dateString != null && dateString.length == 3) {
+    //           let date: Date = new Date(Number(dateString[0]), Number(dateString[1]) - 1, Number(dateString[2]));
+    //           this.takeOff.date = date.getTime();
+    //           this.addLeaveToList();
+    //         }
+    //       }
+    //     }
+    //   ]
+    // });
+    // this.nav.present(prompt);
   }
   
   private addLeaveToList() {
@@ -80,10 +82,10 @@ export class ApplyLeavePage  {
       this.leaves.push({reason: this.takeOff.reason, date: this.takeOff.date});
       console.log("Pushed successfully");
     }
-    this.takeOff = {reason: "", date: this.getTodaysDateInMilliSec()};
+    this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
   }
   
-  private getTodaysDateInMilliSec() {
+  private getTodaysDateAsMilliSec() {
     let date:Date = new Date();
     return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   }
