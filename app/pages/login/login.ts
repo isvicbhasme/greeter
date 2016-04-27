@@ -1,4 +1,4 @@
-import {Page, NavController} from 'ionic-angular';
+import {Page, NavController, Toast} from 'ionic-angular';
 import {ApplyLeavePage} from '../apply-leave/apply-leave';
 import {FORM_DIRECTIVES, AbstractControl, ControlGroup, FormBuilder, Validators} from 'angular2/common';
 
@@ -8,34 +8,57 @@ import {FORM_DIRECTIVES, AbstractControl, ControlGroup, FormBuilder, Validators}
 })
 
 export class LoginPage  {
-  minUsernameLen: number;
-  maxUsernameLen: number;
+  minEmailLen: number;
+  maxEmailLen: number;
   minPasswordLen: number;
   maxPasswordLen: number;
-  isLoggedIn: any;
-  username: AbstractControl;
+  firebaseUrl: string;
+  email: AbstractControl;
   password: AbstractControl;
   authForm: ControlGroup;
   
   constructor(private nav: NavController, fb: FormBuilder) {
-    this.isLoggedIn = false;
-    this.minUsernameLen = 4;
-    this.maxUsernameLen = 16;
+    this.minEmailLen = 4;
+    this.maxEmailLen = 30;
     this.minPasswordLen = 6;
-    this.maxPasswordLen = 16;
+    this.maxPasswordLen = 20;
+    this.firebaseUrl = "https://greeter.firebaseio.com/";
     this.authForm = fb.group({
-      'username' : ['', Validators.compose([Validators.required, Validators.minLength(this.minUsernameLen), Validators.maxLength(this.maxUsernameLen)])],
+      'email' : ['', Validators.compose([Validators.required, Validators.minLength(this.minEmailLen), Validators.maxLength(this.maxEmailLen)])],
       'password': ['', Validators.compose([Validators.required, Validators.minLength(this.minPasswordLen), Validators.maxLength(this.maxPasswordLen)])]
     });
-    this.username = this.authForm.controls['username'];
+    this.email = this.authForm.controls['email'];
     this.password = this.authForm.controls['password'];
   }
   
-  public login(value: string): void {
+  public login(): void {
     if(this.authForm.valid) {
-      this.isLoggedIn = true;
-      console.log("Submitted value:"+value);
+      let ref = new Firebase(this.firebaseUrl);
+      ref.authWithPassword({
+        email: this.email.value,
+        password: this.password.value
+      }, (error, data) => this.authHandler(error, data)
+      );
+    }
+  }
+  
+  public authHandler(error, authData) {
+    if(error) {
+      switch(error.code) {
+        case "INVALID_EMAIL": this.showToast("Invalid credentials."); break;
+        case "INVALID_PASSWORD": this.showToast("Invalid password."); break;
+        case "INVALID_CREDENTIALS": this.showToast("Invalid credentials"); break;
+      }
+      console.log("Authentication failed: "+JSON.stringify(error));
+    } else {
       this.nav.setRoot(ApplyLeavePage);
     }
+  }
+  
+  private showToast(msg: string) {
+    let toast = Toast.create({
+      message: msg
+    });
+    this.nav.present(toast);
   }
 }
