@@ -1,5 +1,5 @@
 import 'es6-shim';
-import {App, IonicApp, Platform} from 'ionic-angular';
+import {App, IonicApp, Platform, Events, Toast} from 'ionic-angular';
 import {StatusBar, DatePicker} from 'ionic-native';
 import {GettingStartedPage} from './pages/getting-started/getting-started';
 import {ListPage} from './pages/list/list';
@@ -17,7 +17,7 @@ class MyApp {
   rootPage: any = LoginPage;
   pages: Array<{title: string, component: any}>
 
-  constructor(private app: IonicApp, private platform: Platform) {
+  constructor(private app: IonicApp, private platform: Platform, private events: Events) {
     this.initializeApp();
 
     // used for an example of ngFor and navigation
@@ -26,6 +26,7 @@ class MyApp {
       { title: 'List', component: ListPage }
     ];
 
+    this.subscribeToAuthChanges();
   }
 
   initializeApp() {
@@ -41,5 +42,23 @@ class MyApp {
     // we wouldn't want the back button to show in this scenario
     let nav = this.app.getComponent('nav');
     nav.setRoot(page.component);
+  }
+  
+  private subscribeToAuthChanges() {
+    this.events.subscribe("user:loggedout", () => {
+      let toast = Toast.create({
+        message: "You have been logged out.",
+        duration: 3000
+      });
+      this.app.getComponent('nav').present(toast);
+    });
+    
+    this.events.subscribe("user:loggedin", () => {
+      let toast = Toast.create({
+        message: "You have logged in.",
+        duration: 3000
+      });
+      this.app.getComponent('nav').present(toast);
+    });
   }
 }
