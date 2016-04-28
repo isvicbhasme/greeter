@@ -5,11 +5,13 @@ import {GettingStartedPage} from './pages/getting-started/getting-started';
 import {ListPage} from './pages/list/list';
 import {LoginPage} from './pages/login/login';
 import {ApplyLeavePage} from './pages/apply-leave/apply-leave';
+import {FirebaseService} from './providers/firebase-service/firebase-service'
 
 
 @App({
   templateUrl: 'build/app.html',
-  config: {} // http://ionicframework.com/docs/v2/api/config/Config/
+  config: {}, // http://ionicframework.com/docs/v2/api/config/Config/
+  providers: [FirebaseService] 
 })
 class MyApp {
   rootPage: any = LoginPage;

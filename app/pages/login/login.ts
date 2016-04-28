@@ -1,6 +1,8 @@
 import {Page, NavController, Toast} from 'ionic-angular';
 import {ApplyLeavePage} from '../apply-leave/apply-leave';
 import {FORM_DIRECTIVES, AbstractControl, ControlGroup, FormBuilder, Validators} from 'angular2/common';
+import {FirebaseService} from '../../providers/firebase-service/firebase-service'
+
 
 @Page({
   templateUrl: 'build/pages/login/login.html',
@@ -12,17 +14,15 @@ export class LoginPage  {
   maxEmailLen: number;
   minPasswordLen: number;
   maxPasswordLen: number;
-  firebaseUrl: string;
   email: AbstractControl;
   password: AbstractControl;
   authForm: ControlGroup;
   
-  constructor(private nav: NavController, fb: FormBuilder) {
+  constructor(private nav: NavController, private firebaseService: FirebaseService, fb: FormBuilder) {
     this.minEmailLen = 4;
     this.maxEmailLen = 30;
     this.minPasswordLen = 6;
     this.maxPasswordLen = 20;
-    this.firebaseUrl = "https://greeter.firebaseio.com/";
     this.authForm = fb.group({
       'email' : ['', Validators.compose([Validators.required, Validators.minLength(this.minEmailLen), Validators.maxLength(this.maxEmailLen)])],
       'password': ['', Validators.compose([Validators.required, Validators.minLength(this.minPasswordLen), Validators.maxLength(this.maxPasswordLen)])]
@@ -33,7 +33,7 @@ export class LoginPage  {
   
   public login(): void {
     if(this.authForm.valid) {
-      let ref = new Firebase(this.firebaseUrl);
+      let ref = this.firebaseService.getRefToBaseUrl();
       ref.authWithPassword({
         email: this.email.value,
         password: this.password.value
