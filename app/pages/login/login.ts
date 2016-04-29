@@ -45,13 +45,11 @@ export class LoginPage  {
   public authHandler(error, authData) {
     if(error) {
       switch(error.code) {
-        case "INVALID_EMAIL": this.showToast("Invalid credentials."); break;
-        case "INVALID_PASSWORD": this.showToast("Invalid password."); break;
-        case "INVALID_CREDENTIALS": this.showToast("Invalid credentials"); break;
+        case "INVALID_EMAIL": this.showToast("Incorrect email. Please try again."); break;
+        case "INVALID_PASSWORD": this.showToast("Incorrect password. Please try again"); break;
+        case "INVALID_CREDENTIALS": this.showToast("Please enter valid credentials"); break;
       }
       console.log("Authentication failed: "+JSON.stringify(error));
-    } else {
-      this.nav.setRoot(ApplyLeavePage);
     }
   }
   

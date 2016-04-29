@@ -47,10 +47,13 @@ class MyApp {
   private subscribeToAuthChanges() {
     this.events.subscribe("user:loggedout", () => {
       let toast = Toast.create({
-        message: "You have been logged out.",
+        message: "Please login to proceed.",
         duration: 3000
       });
       this.app.getComponent('nav').present(toast);
+      if(this.app.getComponent('nav').getActiveChildNav() != LoginPage) {
+        this.app.getComponent('nav').setRoot(LoginPage);
+      }
     });
     
     this.events.subscribe("user:loggedin", () => {
@@ -59,6 +62,10 @@ class MyApp {
         duration: 3000
       });
       this.app.getComponent('nav').present(toast);
+      if(this.app.getComponent('nav').getActiveChildNav() == null ||
+          this.app.getComponent('nav').getActiveChildNav() == LoginPage) {
+        this.app.getComponent('nav').setRoot(ApplyLeavePage, {animate: true});
+      }
     });
   }
 }
