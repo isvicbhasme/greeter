@@ -14,6 +14,8 @@ export class LoginPage  {
   maxEmailLen: number;
   minPasswordLen: number;
   maxPasswordLen: number;
+  submitButtonText: string;
+  isAuthOngoing: boolean;
   email: AbstractControl;
   password: AbstractControl;
   authForm: ControlGroup;
@@ -23,6 +25,8 @@ export class LoginPage  {
     this.maxEmailLen = 30;
     this.minPasswordLen = 6;
     this.maxPasswordLen = 20;
+    this.submitButtonText = "Login";
+    this.isAuthOngoing = false;
     this.authForm = fb.group({
       'email' : ['', Validators.compose([Validators.required, Validators.minLength(this.minEmailLen), Validators.maxLength(this.maxEmailLen)])],
       'password': ['', Validators.compose([Validators.required, Validators.minLength(this.minPasswordLen), Validators.maxLength(this.maxPasswordLen)])]
@@ -32,6 +36,8 @@ export class LoginPage  {
   }
   
   public login(): void {
+    this.submitButtonText = "Please wait..."
+    this.isAuthOngoing = true;
     if(this.authForm.valid) {
       let ref = this.firebaseService.getRefToBaseUrl();
       ref.authWithPassword({
@@ -43,6 +49,8 @@ export class LoginPage  {
   }
   
   public authHandler(error, authData) {
+    this.submitButtonText = "Login";
+    this.isAuthOngoing = false;
     if(error) {
       switch(error.code) {
         case "INVALID_EMAIL": this.showToast("Incorrect email. Please try again."); break;

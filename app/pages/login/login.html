@@ -20,7 +20,7 @@
       <div *ngIf="password.hasError('maxlength') && password.touched" class="error-box">* Maximum password length is {{maxPasswordLen}} </div> 
       
       <p>
-        <button [disabled]="!authForm.valid" type="submit" block>Submit</button>
+        <button [disabled]="!authForm.valid || isAuthOngoing" type="submit" block>{{submitButtonText}}</button>
       </p>
     </form>
   </ion-list>
