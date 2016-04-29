@@ -1,6 +1,7 @@
 import {Page, Alert, NavController} from 'ionic-angular';
 import {DatePicker} from 'ionic-native';
 import {NgZone} from 'angular2/core';
+import {FirebaseService} from '../../providers/firebase-service/firebase-service'
 
 @Page({
   templateUrl: 'build/pages/apply-leave/apply-leave.html'
@@ -10,7 +11,7 @@ export class ApplyLeavePage  {
   leaves: Array<{reason: string, date: number}>; 
   takeOff: {reason: string, date: number};
   
-  constructor(private nav: NavController, private zone: NgZone) {
+  constructor(private nav: NavController, private zone: NgZone, private firebaseService: FirebaseService) {
     this.leaves = [];
     this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
   }
@@ -75,6 +76,10 @@ export class ApplyLeavePage  {
     //   ]
     // });
     // this.nav.present(prompt);
+  }
+  
+  public logout() {
+    this.firebaseService.getRefToBaseUrl().unauth();
   }
   
   private addLeaveToList() {
