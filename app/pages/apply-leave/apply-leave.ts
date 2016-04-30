@@ -1,4 +1,4 @@
-import {Page, Alert, NavController} from 'ionic-angular';
+import {Page, Alert, NavController, Events} from 'ionic-angular';
 import {DatePicker} from 'ionic-native';
 import {NgZone} from 'angular2/core';
 import {FirebaseService} from '../../providers/firebase-service/firebase-service'
@@ -11,9 +11,14 @@ export class ApplyLeavePage  {
   leaves: Array<{reason: string, date: number}>; 
   takeOff: {reason: string, date: number};
   
-  constructor(private nav: NavController, private zone: NgZone, private firebaseService: FirebaseService) {
+  constructor(private nav: NavController,
+              private zone: NgZone,
+              private firebaseService: FirebaseService,
+              private events: Events) {
     this.leaves = [];
     this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
+    this.subscribeToLeaveChanges()
+    firebaseService.registerForCurrentUserLeaveEvents();
   }
   
   public revokeLeave(leave: {reason: string, date: number}) {
@@ -109,5 +114,16 @@ export class ApplyLeavePage  {
       date.setDate(date.getDate() + (7 - date.getDay())); // Find coming Sunday
     }
     return date;
+  }
+  
+  private subscribeToLeaveChanges() {
+    this.events.subscribe("user:leaveApplied", (data) => {
+      data.forEach((leave) => {
+        this.leaves.push({
+          "reason": leave.reason,
+          "date": Number(leave.date)
+        });
+      })
+    });
   }
 }
