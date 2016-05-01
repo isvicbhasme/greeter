@@ -38,10 +38,17 @@ export class FirebaseService {
   public registerForCurrentUserLeaveEvents() {
     this.getRefToBaseUrl().child("users/"+this.uid+"/leaves").off();
     this.getRefToBaseUrl().child("users/"+this.uid+"/leaves").on("child_added", (data) => this.handleNewLeaveTimestamp(data));
+    this.getRefToBaseUrl().child("users/"+this.uid+"/leaves").on("child_removed", (data) => this.handleDeletedLeaveTimestamp(data));
   }
   
   private handleNewLeaveTimestamp(timestampNode) {
     this.getRefToBaseUrl().child("leaves/"+timestampNode.key()+"/"+this.uid).once("value", (data) => this.publishNewLeaveEvent(data));
+  }
+  
+  private handleDeletedLeaveTimestamp(timestampNode) {
+    if(timestampNode != null) {
+      this.events.publish("user:leaveDeleted", timestampNode.key());
+    }
   }
   
   private publishNewLeaveEvent(data) {
