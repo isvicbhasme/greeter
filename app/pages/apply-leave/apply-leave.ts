@@ -32,58 +32,58 @@ export class ApplyLeavePage  {
   }
   
   public showPopup() {
-    // DatePicker.show({
-    //   date: this.getNextSundayAsDate(),
-    //   mode: 'date',
-    //   titleText: 'Take-off on...',
-    //   todayText: 'Today',
-    //   androidTheme: 3 // THEME_HOLO_LIGHT
-    // }).then(
-    //   date => {
-    //     console.log(date);
-    //     if(date != null) {
-    //       this.takeOff.date = date.getTime();
-    //       console.log("Calling addNewLeave() "+ JSON.stringify(this.takeOff));
-    //       this.zone.run(() => this.addLeaveToList());
-    //       this.firebaseService.addNewLeave(this.takeOff);
-    //     }
-    //   },
-    //   error => {
-    //     console.log(error);
-    //   }
-    // )
-    let prompt = Alert.create({
-      title: 'Take-off on...',
-      inputs: [
-        {
-          name: 'value', // this is passed in handler
-          type: 'date',
-          value: this.getNextSundayAsMilliSec()
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          handler: (data) => {
-            console.log('Cancel clicked');
-          }
-        },
-        {
-          text: 'Save',
-          handler: (data) => {
-            let dateString: string[] = data.value.split("-");
-            if(dateString != null && dateString.length == 3) {
-              let date: Date = new Date(Number(dateString[0]), Number(dateString[1]) - 1, Number(dateString[2]));
-              this.takeOff.date = date.getTime();
-              this.addLeaveToList();
-              this.firebaseService.addNewLeave(this.takeOff);
-              this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
-            }
-          }
+    DatePicker.show({
+      date: this.getNextSundayAsDate(),
+      mode: 'date',
+      titleText: 'Take-off on...',
+      todayText: 'Today',
+      androidTheme: 3 // THEME_HOLO_LIGHT
+    }).then(
+      date => {
+        console.log(date);
+        if(date != null) {
+          this.takeOff.date = date.getTime();
+          console.log("Adding new leave "+ JSON.stringify(this.takeOff));
+          this.zone.run(() => this.addLeaveToList());
+          this.firebaseService.addNewLeave(this.takeOff);
         }
-      ]
-    });
-    this.nav.present(prompt);
+      },
+      error => {
+        console.log(error);
+      }
+    )
+    // let prompt = Alert.create({
+    //   title: 'Take-off on...',
+    //   inputs: [
+    //     {
+    //       name: 'value', // this is passed in handler
+    //       type: 'date',
+    //       value: this.getNextSundayAsMilliSec()
+    //     },
+    //   ],
+    //   buttons: [
+    //     {
+    //       text: 'Cancel',
+    //       handler: (data) => {
+    //         console.log('Cancel clicked');
+    //       }
+    //     },
+    //     {
+    //       text: 'Save',
+    //       handler: (data) => {
+    //         let dateString: string[] = data.value.split("-");
+    //         if(dateString != null && dateString.length == 3) {
+    //           let date: Date = new Date(Number(dateString[0]), Number(dateString[1]) - 1, Number(dateString[2]));
+    //           this.takeOff.date = date.getTime();
+    //           this.addLeaveToList();
+    //           this.firebaseService.addNewLeave(this.takeOff);
+    //           this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
+    //         }
+    //       }
+    //     }
+    //   ]
+    // });
+    // this.nav.present(prompt);
   }
   
   public logout() {
