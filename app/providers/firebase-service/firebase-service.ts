@@ -43,10 +43,12 @@ export class FirebaseService {
   
   private handleNewLeaveTimestamp(timestampNode) {
     this.getRefToBaseUrl().child("leaves/"+timestampNode.key()+"/"+this.uid).once("value", (data) => this.publishNewLeaveEvent(data));
+    this.getRefToBaseUrl().child("leaves/"+timestampNode.key()+"/"+this.uid).on("child_changed", (data) => this.publishLeaveChangeEvent(data));
   }
   
   private handleDeletedLeaveTimestamp(timestampNode) {
-    if(timestampNode != null) {
+    if(timestampNode != null && timestampNode.ref().parent().parent().key() == this.uid) {
+      this.getRefToBaseUrl().child("leaves/"+timestampNode.key()+"/"+this.uid).off();
       this.events.publish("user:leaveDeleted", timestampNode.key());
     }
   }
@@ -65,6 +67,21 @@ export class FirebaseService {
       }
       console.log("Publishing:"+JSON.stringify(leave));
       this.events.publish("user:leaveApplied", leave);
+    }
+  }
+  
+  private publishLeaveChangeEvent(data) {
+    if(data != null) {
+      // data.ref() has url similar to this format - https://greeter.firebaseio.com/leaves/1461868200000/4bbc970a-0eae-481e-b5ad-2cfeac8b188b/approved
+      let uidFromRef: string = data.ref().parent().key();
+      let timestamp: Number = data.ref().parent().parent().key();
+      let changedData: Object = {};
+      changedData["key"] = data.key();
+      changedData["value"] = data.val();
+      changedData["date"] = timestamp;
+      if(this.uid == uidFromRef) {
+        this.events.publish("user:leaveModified", changedData);
+      }
     }
   }
   

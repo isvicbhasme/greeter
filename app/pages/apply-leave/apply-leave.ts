@@ -146,6 +146,17 @@ export class ApplyLeavePage  {
       });
       this.leaves = updatedArray;
     });
+    
+    this.events.subscribe("user:leaveModified", (data) => {
+      data.forEach((changedData) => {
+        if(changedData.date != null) {
+          let leaveInfo = this.isTimestampInList(changedData.date);
+          if(leaveInfo != undefined && leaveInfo != null && leaveInfo[changedData.key] != null) {
+            leaveInfo[changedData.key] = changedData.value;
+          }
+        }
+      });
+    });
   }
   
   private isTimestampInList(time: Number) {
