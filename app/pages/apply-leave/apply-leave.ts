@@ -32,55 +32,58 @@ export class ApplyLeavePage  {
   }
   
   public showPopup() {
-    DatePicker.show({
-      date: this.getNextSundayAsDate(),
-      mode: 'date',
-      titleText: 'Take-off on...',
-      todayText: 'Today',
-      androidTheme: 3 // THEME_HOLO_LIGHT
-    }).then(
-      date => {
-        console.log(date);
-        if(date != null) {
-          this.takeOff.date = date.getTime();
-          console.log("Calling addLeaveToList() "+ JSON.stringify(this.takeOff));
-          this.zone.run(() => this.addLeaveToList());
-        }
-      },
-      error => {
-        console.log(error);
-      }
-    )
-    // let prompt = Alert.create({
-    //   title: 'Take-off on...',
-    //   inputs: [
-    //     {
-    //       name: 'value', // this is passed in handler
-    //       type: 'date',
-    //       value: this.getNextSundayAsMilliSec()
-    //     },
-    //   ],
-    //   buttons: [
-    //     {
-    //       text: 'Cancel',
-    //       handler: (data) => {
-    //         console.log('Cancel clicked');
-    //       }
-    //     },
-    //     {
-    //       text: 'Save',
-    //       handler: (data) => {
-    //         let dateString: string[] = data.value.split("-");
-    //         if(dateString != null && dateString.length == 3) {
-    //           let date: Date = new Date(Number(dateString[0]), Number(dateString[1]) - 1, Number(dateString[2]));
-    //           this.takeOff.date = date.getTime();
-    //           this.addLeaveToList();
-    //         }
-    //       }
+    // DatePicker.show({
+    //   date: this.getNextSundayAsDate(),
+    //   mode: 'date',
+    //   titleText: 'Take-off on...',
+    //   todayText: 'Today',
+    //   androidTheme: 3 // THEME_HOLO_LIGHT
+    // }).then(
+    //   date => {
+    //     console.log(date);
+    //     if(date != null) {
+    //       this.takeOff.date = date.getTime();
+    //       console.log("Calling addNewLeave() "+ JSON.stringify(this.takeOff));
+    //       this.zone.run(() => this.addLeaveToList());
+    //       this.firebaseService.addNewLeave(this.takeOff);
     //     }
-    //   ]
-    // });
-    // this.nav.present(prompt);
+    //   },
+    //   error => {
+    //     console.log(error);
+    //   }
+    // )
+    let prompt = Alert.create({
+      title: 'Take-off on...',
+      inputs: [
+        {
+          name: 'value', // this is passed in handler
+          type: 'date',
+          value: this.getNextSundayAsMilliSec()
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          handler: (data) => {
+            console.log('Cancel clicked');
+          }
+        },
+        {
+          text: 'Save',
+          handler: (data) => {
+            let dateString: string[] = data.value.split("-");
+            if(dateString != null && dateString.length == 3) {
+              let date: Date = new Date(Number(dateString[0]), Number(dateString[1]) - 1, Number(dateString[2]));
+              this.takeOff.date = date.getTime();
+              this.addLeaveToList();
+              this.firebaseService.addNewLeave(this.takeOff);
+              this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
+            }
+          }
+        }
+      ]
+    });
+    this.nav.present(prompt);
   }
   
   public logout() {
@@ -92,7 +95,6 @@ export class ApplyLeavePage  {
       this.leaves.push({reason: this.takeOff.reason, date: this.takeOff.date});
       console.log("Pushed successfully");
     }
-    this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
   }
   
   private getTodaysDateAsMilliSec() {
@@ -118,12 +120,23 @@ export class ApplyLeavePage  {
   
   private subscribeToLeaveChanges() {
     this.events.subscribe("user:leaveApplied", (data) => {
-      data.forEach((leave) => {
-        this.leaves.push({
-          "reason": leave.reason,
-          "date": Number(leave.date)
-        });
-      })
+      let isSortingNeeded : boolean = false;
+      data.forEach((leave) => {  // Do not add any async calls in this. Otherwise sorting gets affected.
+        if(this.isTimestampInList(Number(leave.date)) == undefined) {
+          this.leaves.push({
+            "reason": leave.reason,
+            "date": Number(leave.date)
+          });
+          isSortingNeeded = true;
+        }
+      });
+      if(isSortingNeeded) {
+        this.leaves.sort((a, b) => a.date - b.date); // Multiply by -1 for descending order. That simple... ;)
+      }
     });
+  }
+  
+  private isTimestampInList(time: Number) {
+    return this.leaves.find((element) => element.date == time);
   }
 }
