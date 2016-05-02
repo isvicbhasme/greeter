@@ -25,6 +25,7 @@ export class ApplyLeavePage  {
     let leaveToDelete: number = this.leaves.indexOf(leave);
     if(leaveToDelete > -1) {
       let deletedLeaves: any[] = this.leaves.splice(leaveToDelete, 1);
+      this.firebaseService.revokeLeave(deletedLeaves[0].date);
       console.log("Notification: Deleted "+deletedLeaves.length+" leave(s).");
     } else {
       console.log("Error: Tried to delete leave at index:"+leaveToDelete+" data:"+JSON.stringify(leave));

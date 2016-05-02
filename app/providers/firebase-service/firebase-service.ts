@@ -41,6 +41,17 @@ export class FirebaseService {
     this.getRefToBaseUrl().child("users/"+this.uid+"/leaves").on("child_removed", (data) => this.handleDeletedLeaveTimestamp(data));
   }
   
+  public revokeLeave(timestamp: number) {
+    this.getRefToBaseUrl().child("users/"+this.uid+"/leaves/"+timestamp).remove();
+    this.updateLeaveAttribute({timestamp: timestamp, key: "revoked", value: "true"});
+  }
+  
+  private updateLeaveAttribute(changelist: {timestamp: number, key: string, value: string}) {
+    let keyValuePair: Object = {};
+    keyValuePair[changelist.key] = changelist.value;
+    this.getRefToBaseUrl().child("leaves/"+changelist.timestamp+"/"+this.uid+"/").update(keyValuePair);
+  }
+  
   private handleNewLeaveTimestamp(timestampNode) {
     this.getRefToBaseUrl().child("leaves/"+timestampNode.key()+"/"+this.uid).once("value", (data) => this.publishNewLeaveEvent(data));
     this.getRefToBaseUrl().child("leaves/"+timestampNode.key()+"/"+this.uid).on("child_changed", (data) => this.publishLeaveChangeEvent(data));
@@ -80,6 +91,7 @@ export class FirebaseService {
       changedData["value"] = data.val();
       changedData["date"] = timestamp;
       if(this.uid == uidFromRef) {
+        console.log("Publishing change:"+JSON.stringify(changedData));
         this.events.publish("user:leaveModified", changedData);
       }
     }
