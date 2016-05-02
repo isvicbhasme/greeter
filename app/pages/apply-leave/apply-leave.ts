@@ -144,7 +144,9 @@ export class ApplyLeavePage  {
           isArrayToBeUpdated = true;
         }
       });
-      this.leaves = updatedArray;
+      if(isArrayToBeUpdated) {
+        this.leaves = updatedArray;
+      }
     });
     
     this.events.subscribe("user:leaveModified", (data) => {
