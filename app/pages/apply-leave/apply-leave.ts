@@ -2,13 +2,15 @@ import {Page, Alert, NavController, Events} from 'ionic-angular';
 import {DatePicker} from 'ionic-native';
 import {NgZone} from 'angular2/core';
 import {FirebaseService} from '../../providers/firebase-service/firebase-service'
+import {LeaveStruct} from '../../providers/leave-struct/leave-struct'
+
 
 @Page({
   templateUrl: 'build/pages/apply-leave/apply-leave.html'
 })
 
 export class ApplyLeavePage  {
-  leaves: Array<{reason: string, date: number}>; 
+  leaves: Array<LeaveStruct>; 
   takeOff: {reason: string, date: number};
   
   constructor(private nav: NavController,
@@ -21,15 +23,21 @@ export class ApplyLeavePage  {
     firebaseService.registerForCurrentUserLeaveEvents();
   }
   
-  public revokeLeave(leave: {reason: string, date: number}) {
-    let leaveToDelete: number = this.leaves.indexOf(leave);
-    if(leaveToDelete > -1) {
-      let deletedLeaves: any[] = this.leaves.splice(leaveToDelete, 1);
-      this.firebaseService.revokeLeave(deletedLeaves[0].date);
-      console.log("Notification: Deleted "+deletedLeaves.length+" leave(s).");
-    } else {
-      console.log("Error: Tried to delete leave at index:"+leaveToDelete+" data:"+JSON.stringify(leave));
+  public revokeLeave(leave: LeaveStruct) {
+    let deletedLeaves: LeaveStruct[] = this.removeLeaveFromList(leave.date);
+    deletedLeaves.forEach((deletedLeave) => {
+      this.firebaseService.revokeLeave(deletedLeave.date);
+    });
+  }
+  
+  private removeLeaveFromList(date: number): LeaveStruct[] {
+    let leaveToDelete = this.isTimestampInList(date);
+    let deletedLeaves: LeaveStruct[] = [];
+    if(leaveToDelete != undefined && leaveToDelete != null) {
+      deletedLeaves = this.leaves.splice(this.leaves.indexOf(leaveToDelete), 1);
+      console.log("Notification: Deleted "+deletedLeaves[0].date+" leave.");
     }
+    return deletedLeaves;
   }
   
   public showPopup() {
@@ -45,7 +53,7 @@ export class ApplyLeavePage  {
     //     if(date != null) {
     //       this.takeOff.date = date.getTime();
     //       console.log("Adding new leave "+ JSON.stringify(this.takeOff));
-    //       this.zone.run(() => this.addLeaveToList());
+    //       this.zone.run(() => this.addNewLeaveToList());
     //       this.firebaseService.addNewLeave(this.takeOff);
     //     }
     //   },
@@ -59,7 +67,7 @@ export class ApplyLeavePage  {
         {
           name: 'value', // this is passed in handler
           type: 'date',
-          value: this.getNextSundayAsMilliSec()
+          value: this.getNextSundayAsDateStr()
         },
       ],
       buttons: [
@@ -76,7 +84,7 @@ export class ApplyLeavePage  {
             if(dateString != null && dateString.length == 3) {
               let date: Date = new Date(Number(dateString[0]), Number(dateString[1]) - 1, Number(dateString[2]));
               this.takeOff.date = date.getTime();
-              this.addLeaveToList();
+              this.addNewLeaveToList();
               this.firebaseService.addNewLeave(this.takeOff);
               this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
             }
@@ -91,9 +99,13 @@ export class ApplyLeavePage  {
     this.firebaseService.getRefToBaseUrl().unauth();
   }
   
-  private addLeaveToList() {
+  private addNewLeaveToList() {
     if(this.takeOff.reason != null && this.takeOff.reason.length > 0 && this.takeOff.date > 0) {
-      this.leaves.push({reason: this.takeOff.reason, date: this.takeOff.date});
+      let leave = new LeaveStruct();
+      leave.reason = this.takeOff.reason;
+      leave.date = this.takeOff.date;
+      this.leaves.push(leave);
+      this.sortLeavesList();
       console.log("Pushed successfully");
     }
   }
@@ -103,15 +115,15 @@ export class ApplyLeavePage  {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   }
   
-  private getNextSundayAsMilliSec() {
+  private getNextSundayAsDateStr() {
     let date: Date = new Date();
     if(date.getDay() > 0) {
       date.setDate(date.getDate() + (7 - date.getDay())); // Find coming Sunday
     }
-    return date.getFullYear() + "-" + ("0" + (date.getMonth() + 1)).slice(-2) + "-" + date.getDate();
+    return date.getFullYear() + "-" + ("0" + (date.getMonth() + 1)).slice(-2) + "-" + ("0"+date.getDate()).slice(-2);
   }
   
-  private getNextSundayAsDate() {
+  private getNextSundayAsDate(): Date {
     let date: Date = new Date();
     if(date.getDay() > 0) {
       date.setDate(date.getDate() + (7 - date.getDay())); // Find coming Sunday
@@ -119,20 +131,20 @@ export class ApplyLeavePage  {
     return date;
   }
   
-  private subscribeToLeaveChanges() {
+  private subscribeToLeaveChanges(): void {
     this.events.subscribe("user:leaveApplied", (data) => {
       let isSortingNeeded : boolean = false;
       data.forEach((leave) => {  // Do not add any async calls in this. Otherwise sorting gets affected.
-        if(this.isTimestampInList(Number(leave.date)) == undefined) {
-          this.leaves.push({
-            "reason": leave.reason,
-            "date": Number(leave.date)
-          });
+        if(this.isTimestampInList(Number(leave.date)) == undefined && leave.revoked == false) {
+          let newLeave = new LeaveStruct();
+          newLeave.reason = leave.reason;
+          newLeave.date = Number(leave.date);
+          this.leaves.push(newLeave);
           isSortingNeeded = true;
         }
       });
       if(isSortingNeeded) {
-        this.leaves.sort((a, b) => a.date - b.date); // Multiply by -1 for descending order. That simple... ;)
+        this.sortLeavesList();
       }
     });
     
@@ -150,19 +162,30 @@ export class ApplyLeavePage  {
       }
     });
     
+    // Changing 'revoked' from false to true is not handled
+    // Changing 'date' does not invoke sort
     this.events.subscribe("user:leaveModified", (data) => {
       data.forEach((changedData) => {
         if(changedData.date != null) {
           let leaveInfo = this.isTimestampInList(changedData.date);
           if(leaveInfo != undefined && leaveInfo != null && leaveInfo[changedData.key] != null) {
-            leaveInfo[changedData.key] = changedData.value;
+            if(changedData.key == "revoked" && changedData.value == "true") {
+              this.removeLeaveFromList(changedData.date);
+            }
+            else {
+              leaveInfo[changedData.key] = changedData.value;
+            }
           }
         }
       });
     });
   }
   
-  private isTimestampInList(time: Number) {
+  private isTimestampInList(time: Number): LeaveStruct {
     return this.leaves.find((element) => element.date == time);
+  }
+  
+  private sortLeavesList(): void {
+    this.leaves.sort((a, b) => a.date - b.date); // Multiply by -1 for descending order. That simple... ;)
   }
 }

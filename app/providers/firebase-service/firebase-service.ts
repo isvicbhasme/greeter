@@ -1,5 +1,6 @@
 import {Injectable} from 'angular2/core';
 import {Events} from 'ionic-angular';
+import {LeaveStruct} from '../../providers/leave-struct/leave-struct'
 
 
 @Injectable()
@@ -42,11 +43,10 @@ export class FirebaseService {
   }
   
   public revokeLeave(timestamp: number) {
-    this.getRefToBaseUrl().child("users/"+this.uid+"/leaves/"+timestamp).remove();
-    this.updateLeaveAttribute({timestamp: timestamp, key: "revoked", value: "true"});
+    this.updateLeaveAttribute<boolean>({timestamp: timestamp, key: "revoked", value: true});
   }
   
-  private updateLeaveAttribute(changelist: {timestamp: number, key: string, value: string}) {
+  private updateLeaveAttribute<T>(changelist: {timestamp: number, key: string, value: T}) {
     let keyValuePair: Object = {};
     keyValuePair[changelist.key] = changelist.value;
     this.getRefToBaseUrl().child("leaves/"+changelist.timestamp+"/"+this.uid+"/").update(keyValuePair);
@@ -67,15 +67,12 @@ export class FirebaseService {
   private publishNewLeaveEvent(data) {
     // data.ref() will return this format - https://greeter.firebaseio.com/leaves/1460678400000/4bbc970a-0eae-481e-b5ad-2cfeac8b188b
     if(data != null) {
-      let refAsArray : Array<String> = data.ref().toString().split('/');
-      refAsArray.pop(); // Remove uid
-      let leave = {
-        "isApproved" : data.val().approved,
-        "isRejected" : data.val().rejected,
-        "isRevoked"  : data.val().revoked,
-        "reason"     : data.val().reason,
-        "date"       : refAsArray.pop() // Get the timestamp
-      }
+      let leave = new LeaveStruct();
+      leave.date       = Number(data.ref().parent().key()), // Get the timestamp
+      leave.approved   = data.val().approved,
+      leave.rejected   = data.val().rejected,
+      leave.revoked    = data.val().revoked,
+      leave.reason     = data.val().reason
       console.log("Publishing:"+JSON.stringify(leave));
       this.events.publish("user:leaveApplied", leave);
     }
