@@ -55,6 +55,7 @@ export class ApplyLeavePage  {
     //       console.log("Adding new leave "+ JSON.stringify(this.takeOff));
     //       this.zone.run(() => this.addNewLeaveToList());
     //       this.firebaseService.addNewLeave(this.takeOff);
+    //       this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
     //     }
     //   },
     //   error => {
@@ -132,14 +133,11 @@ export class ApplyLeavePage  {
   }
   
   private subscribeToLeaveChanges(): void {
-    this.events.subscribe("user:leaveApplied", (data) => {
+    this.events.subscribe("user:leaveApplied", (data: LeaveStruct[]) => {
       let isSortingNeeded : boolean = false;
       data.forEach((leave) => {  // Do not add any async calls in this. Otherwise sorting gets affected.
         if(this.isTimestampInList(Number(leave.date)) == undefined && leave.revoked == false) {
-          let newLeave = new LeaveStruct();
-          newLeave.reason = leave.reason;
-          newLeave.date = Number(leave.date);
-          this.leaves.push(newLeave);
+          this.leaves.push(leave);
           isSortingNeeded = true;
         }
       });

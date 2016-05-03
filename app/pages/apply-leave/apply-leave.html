@@ -14,12 +14,14 @@
 
 <ion-content>
   <ion-list>
-    <ion-item *ngFor="#leave of leaves">
+    <ion-item text-wrap *ngFor="#leave of leaves">
       <h2>{{leave.date | date: 'dd/MMM/yyyy'}}</h2>
-      <h3>{{leave.reason}}</h3>
+      <ion-badge secondary item-right [hidden]="!leave.approved">approved</ion-badge>
+      <ion-badge danger item-right [hidden]="!leave.rejected">rejected</ion-badge>
       <button clear item-right (click)="revokeLeave(leave)">
         <ion-icon name="trash"></ion-icon>
       </button>
+      <p>{{leave.reason}}</p>
     </ion-item> 
   </ion-list>
 </ion-content>
