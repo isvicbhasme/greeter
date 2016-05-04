@@ -41,7 +41,7 @@ class MyApp {
       }
     });
     
-    this.events.subscribe("user:loggedin", (isAdmin: boolean) => {
+    this.events.subscribe("user:loggedin", (params) => {
       if(this.app.getComponent('nav').getActiveChildNav() == null ||
           this.app.getComponent('nav').getActiveChildNav() == LoginPage) {
         let toast = Toast.create({
@@ -49,7 +49,7 @@ class MyApp {
           duration: 3000
         });
         this.app.getComponent('nav').present(toast);
-        if(isAdmin) {
+        if(params[0].isAdmin === true) {
           this.app.getComponent('nav').setRoot(AdminPage, {animate: true});
         } else {
           this.app.getComponent('nav').setRoot(ApplyLeavePage, {animate: true});

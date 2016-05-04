@@ -104,11 +104,12 @@ export class FirebaseService {
     ref.onAuth((auth) => {
       if(auth) {
         this.uid = auth.uid;
-        this.getRefToBaseUrl().child("profile/"+this.uid+"/Role").once("value", (role) => {
-          this.admin = role.val() >= 10;
+        this.admin = false;
+        this.getRefToBaseUrl().child("profile/"+this.uid+"/role").once("value", (role) => {
+          this.admin = (role.val() >= 10);
+          this.events.publish("user:loggedin", {isAdmin: this.admin});
+          console.log("User logged in : "+JSON.stringify(auth));
         });
-        this.events.publish("user:loggedin", this.admin);
-        console.log("User logged in : "+JSON.stringify(auth));
       } else {
         this.uid = "";
         this.events.publish("user:loggedout");
