@@ -7,9 +7,14 @@ import {LeaveStruct} from '../../providers/leave-struct/leave-struct'
 export class FirebaseService {
   private baseurl: Firebase = null;
   private uid: string = "";
+  private admin: boolean = false; 
 
   constructor(private events: Events) {
     this.registerForAuthEvents();
+  }
+  
+  public isAdmin(): boolean {
+    return this.admin;
   }
   
   public getRefToBaseUrl() : Firebase {
@@ -99,7 +104,10 @@ export class FirebaseService {
     ref.onAuth((auth) => {
       if(auth) {
         this.uid = auth.uid;
-        this.events.publish("user:loggedin");
+        this.getRefToBaseUrl().child("profile/"+this.uid+"/Role").once("value", (role) => {
+          this.admin = role.val() >= 10;
+        });
+        this.events.publish("user:loggedin", this.admin);
         console.log("User logged in : "+JSON.stringify(auth));
       } else {
         this.uid = "";

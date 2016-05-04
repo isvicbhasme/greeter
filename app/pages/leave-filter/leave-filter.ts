@@ -1,4 +1,5 @@
 import {Page, NavController} from 'ionic-angular';
+import {FORM_DIRECTIVES, AbstractControl, ControlGroup, FormBuilder, Validators} from 'angular2/common';
 
 /*
   Generated class for the LeaveFilterPage page.
@@ -10,5 +11,21 @@ import {Page, NavController} from 'ionic-angular';
   templateUrl: 'build/pages/leave-filter/leave-filter.html',
 })
 export class LeaveFilterPage {
-  constructor(public nav: NavController) {}
+  customizeForm: ControlGroup;
+  
+  constructor(public nav: NavController, FilePropertyBag: FormBuilder) {
+    this.customizeForm = FilePropertyBag.group({});
+  }
+  
+  public cancelFilter(): void {
+    this.nav.pop();
+  }
+  
+  public applyFilter(): void {
+    
+  }
+  
+  public clicked(): void {
+    console.log("Clicked!");
+  }
 }

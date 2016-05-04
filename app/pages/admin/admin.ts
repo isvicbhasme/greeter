@@ -1,4 +1,5 @@
-import {Page, NavController} from 'ionic-angular';
+import {Page, Modal, NavController} from 'ionic-angular';
+import {LeaveFilterPage} from '../leave-filter/leave-filter';
 
 /*
   Generated class for the AdminPage page.
@@ -11,4 +12,9 @@ import {Page, NavController} from 'ionic-angular';
 })
 export class AdminPage {
   constructor(public nav: NavController) {}
+  
+  public showFilter() {
+    let filterModal = Modal.create(LeaveFilterPage);
+    this.nav.present(filterModal);
+  }
 }
