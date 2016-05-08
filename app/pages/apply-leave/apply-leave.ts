@@ -19,7 +19,7 @@ export class ApplyLeavePage  {
               private events: Events) {
     this.leaves = [];
     this.takeOff = {reason: "", date: this.getTodaysDateAsMilliSec()};
-    this.subscribeToLeaveChanges()
+    this.subscribeToLeaveChanges();
     firebaseService.registerForCurrentUserLeaveEvents();
   }
   
@@ -147,17 +147,9 @@ export class ApplyLeavePage  {
     });
     
     this.events.subscribe("user:leaveDeleted", (data) => {
-      let isArrayToBeUpdated = false;
-      let updatedArray = [];
       data.forEach((timestamp) => {
-        if(this.isTimestampInList(timestamp)) {
-          updatedArray = this.leaves.filter((element) => element.date != Number(timestamp))
-          isArrayToBeUpdated = true;
-        }
+        this.removeLeaveFromList(timestamp);
       });
-      if(isArrayToBeUpdated) {
-        this.leaves = updatedArray;
-      }
     });
     
     // Changing 'revoked' from false to true is not handled
