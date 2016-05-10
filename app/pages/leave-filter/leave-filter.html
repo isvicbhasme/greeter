@@ -41,7 +41,7 @@
       <ion-item>
         <ion-icon name="calendar" item-left></ion-icon>
         <ion-label>Date from <span primary>{{fromDateFilter | date:'dd|MMM|yyyy'}}</span> <br/>to <span primary>{{toDateFilter | date:'dd|MMM|yyyy'}}</span></ion-label>
-        <ion-radio [value]="ctrlValues.dateFilter" (click)="clicked()"></ion-radio>
+        <ion-radio [value]="ctrlValues.dateFilter" (click)="showFromDatePicker()"></ion-radio>
       </ion-item>
       <ion-item>
         <ion-icon name="thumbs-up" item-left></ion-icon>
