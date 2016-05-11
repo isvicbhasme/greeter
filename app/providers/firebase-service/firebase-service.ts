@@ -17,6 +17,10 @@ export class FirebaseService {
     return this.admin;
   }
   
+  public getMyUid(): string {
+    return this.uid;
+  }
+  
   public getRefToBaseUrl() : Firebase {
     if(this.baseurl == null) {
       this.baseurl = new Firebase("https://greeter.firebaseio.com/");
@@ -105,7 +109,7 @@ export class FirebaseService {
       if(auth) {
         this.uid = auth.uid;
         this.admin = false;
-        this.getRefToBaseUrl().child("profile/"+this.uid+"/role").once("value", (role) => {
+        this.getRefToBaseUrl().child("roles/"+this.uid).once("value", (role) => {
           this.admin = (role.val() >= 10);
           this.events.publish("user:loggedin", {isAdmin: this.admin});
           console.log("User logged in : "+JSON.stringify(auth));
