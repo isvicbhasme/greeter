@@ -65,7 +65,7 @@
         <ion-icon name="pricetag" item-left></ion-icon>
         <ion-label>Name</ion-label>
         <ion-note item-right>Place under arrest</ion-note>
-        <ion-radio value="name" [value]="ctrlValues.nameFilter"></ion-radio>  
+        <ion-radio value="name" [value]="ctrlValues.nameFilter" (click)="showNames()"></ion-radio>  
       </ion-item>
     </ion-list>
   </form>

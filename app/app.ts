@@ -4,13 +4,14 @@ import {StatusBar, DatePicker} from 'ionic-native';
 import {AdminPage} from './pages/admin/admin';
 import {LoginPage} from './pages/login/login';
 import {ApplyLeavePage} from './pages/apply-leave/apply-leave';
-import {FirebaseService} from './providers/firebase-service/firebase-service'
+import {FirebaseService} from './providers/firebase-service/firebase-service';
+import {FirebaseServiceAdmin} from './providers/firebase-service-admin/firebase-service-admin';
 
 
 @App({
   templateUrl: 'build/app.html',
   config: {}, // http://ionicframework.com/docs/v2/api/config/Config/
-  providers: [FirebaseService] 
+  providers: [FirebaseService, FirebaseServiceAdmin] 
 })
 class MyApp {
   rootPage: any = LoginPage;

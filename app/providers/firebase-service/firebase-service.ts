@@ -7,7 +7,7 @@ import {LeaveStruct} from '../../providers/leave-struct/leave-struct'
 export class FirebaseService {
   private baseurl: Firebase = null;
   private uid: string = "";
-  private admin: boolean = false; 
+  private admin: boolean = false;
 
   constructor(private events: Events) {
     this.registerForAuthEvents();

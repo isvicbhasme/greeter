@@ -1,8 +1,9 @@
-import {Page, NavController, Alert} from 'ionic-angular';
+import {Page, NavController, Alert, NavParams} from 'ionic-angular';
 import {DatePicker} from 'ionic-native';
 import {FORM_DIRECTIVES, Control, ControlGroup, FormBuilder, Validators} from 'angular2/common';
-import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
 import {NgZone} from 'angular2/core';
+import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
+import {FirebaseService} from '../../providers/firebase-service/firebase-service';
 import * as Constants from './leave-filter-constants';
 
 /*
@@ -21,13 +22,20 @@ export class LeaveFilterPage {
   public sort: Control;
   public fromDateFilter: number;
   public toDateFilter: number;
+  public nameList: Array<{uid: string, name: string, username: string}>;
+  public uidFilter: Array<string>;
   public ctrlValues;
   
-  constructor(public nav: NavController, private zone: NgZone) {
+  constructor(public nav: NavController,
+              private zone: NgZone,
+              private firebaseService: FirebaseService,
+              params: NavParams) {
     this.ctrlValues =  Constants.CTRL_VALUES;
     this.group = new Control(Constants.CTRL_VALUES.dateGroup);
     this.sort = new Control(Constants.CTRL_VALUES.dateFilter);
     this.setDefaultDates();
+    this.uidFilter = [];
+    this.nameList = params.get('names');
     this.customizeForm = new ControlGroup({
       "group": this.group,
       "sort": this.sort
@@ -148,6 +156,32 @@ export class LeaveFilterPage {
       ]
     });
     this.nav.present(prompt);
+  }
+  
+  public showNames() {
+    console.log(JSON.stringify(this.nameList));
+    let alert = Alert.create({
+      title: "Greeters",
+      subTitle: "Choose names to filter...",
+      buttons: [
+        {text: "Cancel"},
+        {
+          text: "Select",
+          handler: data => {
+            this.uidFilter = data;
+          }
+        }]
+    });
+    
+    this.nameList.forEach((value:{uid: string, name: string, username: string}) => {
+      alert.addInput({
+        type: 'checkbox',
+        label: value.name + " (" + value.username + ")",
+        value: value.uid,
+        checked: this.uidFilter.find((element) => element === value.uid) != undefined
+      });
+    });
+    this.nav.present(alert);
   }
   
   private setDefaultDates() {

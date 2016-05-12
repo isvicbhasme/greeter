@@ -1,7 +1,8 @@
 import {Page, Modal, NavController, Events} from 'ionic-angular';
 import {LeaveFilterPage} from '../leave-filter/leave-filter';
-import {FirebaseService} from '../../providers/firebase-service/firebase-service'
-import {LeaveStruct} from '../../providers/leave-struct/leave-struct'
+import {FirebaseService} from '../../providers/firebase-service/firebase-service';
+import {FirebaseServiceAdmin} from '../../providers/firebase-service-admin/firebase-service-admin';
+import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
 
 /*
   Generated class for the AdminPage page.
@@ -10,21 +11,26 @@ import {LeaveStruct} from '../../providers/leave-struct/leave-struct'
   Ionic pages and navigation.
 */
 @Page({
-  templateUrl: 'build/pages/admin/admin.html',
+  templateUrl: 'build/pages/admin/admin.html'
 })
 export class AdminPage {
   leaves: Array<LeaveStruct>; 
+  nameList: Array<{uid: string, name: string, username: string}>;
   
   constructor(public nav: NavController,
+              public firebaseAdmin: FirebaseServiceAdmin,
               private firebaseService: FirebaseService,
               private events: Events) {
     this.leaves = [];
+    this.nameList = [];
     this.subscribeToLeaveChanges();
+    this.subscribeToNameListChanges();
     firebaseService.registerForCurrentUserLeaveEvents();
+    firebaseAdmin.registerForNamelistEvents();
   }
   
   public showFilter() {
-    let filterModal = Modal.create(LeaveFilterPage);
+    let filterModal = Modal.create(LeaveFilterPage, {names: this.nameList});
     this.nav.present(filterModal);
   }
   
@@ -73,6 +79,33 @@ export class AdminPage {
     //     }
     //   });
     // });
+  }
+  
+  private subscribeToNameListChanges() {
+    this.events.subscribe("name:added", (data: Array<{uid: string, name: string, username: string}>) => {
+      let isSortingNeeded = false;
+      data.forEach((user) => {
+        if(user.uid !== this.firebaseService.getMyUid()) {
+          console.log("Adding:"+JSON.stringify(user));
+          this.nameList.push(user);
+          isSortingNeeded = true;
+        }
+      });
+      if(isSortingNeeded) {
+        this.sortNameList();
+      }
+    });
+  }
+  
+  private sortNameList() {
+    this.nameList.sort((a, b) => {
+      if(a.name < b.name)
+        return -1;
+      else if(a.name > b.name)
+        return 1;
+      else
+        return 0;
+    });
   }
   
   private isTimestampInList(time: Number): LeaveStruct {
