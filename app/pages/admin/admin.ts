@@ -89,7 +89,7 @@ export class AdminPage {
   }
   
   private subscribeToNameListChanges() {
-    this.events.subscribe("name:added", (data: Array<{uid: string, name: string, username: string}>) => {
+    this.events.subscribe("admin:name:added", (data: Array<{uid: string, name: string, username: string}>) => {
       let isSortingNeeded = false;
       data.forEach((user) => {
         if(user.uid !== this.firebaseService.getMyUid()) {
@@ -103,7 +103,7 @@ export class AdminPage {
       }
     });
     
-    this.events.subscribe("name:changed", (data: Array<{uid: string, name: string, username: string}>) => {
+    this.events.subscribe("admin:name:changed", (data: Array<{uid: string, name: string, username: string}>) => {
       let isSortingNeeded = false;
       data.forEach((user) => {
         let changedUser = this.nameList.find((iter)=> iter.uid === user.uid);

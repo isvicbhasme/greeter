@@ -24,7 +24,7 @@ export class FirebaseServiceAdmin {
         username: data.val().username
       }
       console.log("Sending:"+JSON.stringify(user));
-      this.events.publish("name:added", user);
+      this.events.publish("admin:name:added", user);
     });
     
     this.firebaseService.getRefToBaseUrl().child("namelist").on("child_changed", (data) => {
@@ -36,7 +36,7 @@ export class FirebaseServiceAdmin {
         username: data.val().username
       }
       console.log("Sending:"+JSON.stringify(user));
-      this.events.publish("name:changed", user);
+      this.events.publish("admin:name:changed", user);
     });
   }
 }
