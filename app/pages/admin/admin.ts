@@ -23,10 +23,7 @@ export class AdminPage {
               private events: Events) {
     this.leaves = [];
     this.nameList = [];
-    this.subscribeToLeaveChanges();
-    this.subscribeToNameListChanges();
-    firebaseService.registerForCurrentUserLeaveEvents();
-    firebaseAdmin.registerForNamelistEvents();
+    this.initializeFirebaseEvents();
   }
   
   public showFilter() {
@@ -39,6 +36,13 @@ export class AdminPage {
   
   public logout() {
     this.firebaseService.getRefToBaseUrl().unauth();
+  }
+  
+  private initializeFirebaseEvents(): void {
+    this.subscribeToLeaveChanges();
+    this.subscribeToNameListChanges();
+    this.firebaseService.registerForCurrentUserLeaveEvents();
+    this.firebaseAdmin.registerForNamelistEvents();
   }
   
   private removeLeaveFromList(date: number): LeaveStruct[] {
@@ -91,6 +95,21 @@ export class AdminPage {
         if(user.uid !== this.firebaseService.getMyUid()) {
           console.log("Adding:"+JSON.stringify(user));
           this.nameList.push(user);
+          isSortingNeeded = true;
+        }
+      });
+      if(isSortingNeeded) {
+        this.sortNameList();
+      }
+    });
+    
+    this.events.subscribe("name:changed", (data: Array<{uid: string, name: string, username: string}>) => {
+      let isSortingNeeded = false;
+      data.forEach((user) => {
+        let changedUser = this.nameList.find((iter)=> iter.uid === user.uid);
+        if(changedUser != null) {
+          changedUser.name = user.name;
+          changedUser.username = user.username;
           isSortingNeeded = true;
         }
       });
