@@ -1,4 +1,4 @@
-import {Page, NavController, Alert, NavParams} from 'ionic-angular';
+import {Page, NavController, Alert, NavParams, ViewController} from 'ionic-angular';
 import {DatePicker} from 'ionic-native';
 import {FORM_DIRECTIVES, Control, ControlGroup, FormBuilder, Validators} from 'angular2/common';
 import {NgZone} from 'angular2/core';
@@ -24,11 +24,13 @@ export class LeaveFilterPage {
   public toDateFilter: number;
   public nameList: Array<{uid: string, name: string, username: string}>;
   public uidFilter: Array<string>;
+  public anyFilteredNameForDisplay: string;
   public ctrlValues;
   
   constructor(public nav: NavController,
               private zone: NgZone,
               private firebaseService: FirebaseService,
+              private viewCtrl: ViewController,
               params: NavParams) {
     this.ctrlValues =  Constants.CTRL_VALUES;
     this.group = new Control(Constants.CTRL_VALUES.dateGroup);
@@ -36,6 +38,7 @@ export class LeaveFilterPage {
     this.setDefaultDates();
     this.uidFilter = [];
     this.nameList = params.get('names');
+    this.anyFilteredNameForDisplay = "";
     this.customizeForm = new ControlGroup({
       "group": this.group,
       "sort": this.sort
@@ -48,6 +51,19 @@ export class LeaveFilterPage {
   
   public applyFilter(): void {
     console.log(this.customizeForm.value)
+    let result: {groupBy: string, sortBy: string, sortInfo: Array<string>} = {groupBy: "", sortBy: "", sortInfo: []};
+    result.groupBy = this.customizeForm.value.group;
+    result.sortBy = this.customizeForm.value.sort;
+    if(this.customizeForm.value.sort === this.ctrlValues.dateFilter) {
+      result.sortInfo = [this.fromDateFilter.toString(), this.toDateFilter.toString()];
+    }
+    else if(this.customizeForm.value.sort === this.ctrlValues.nameFilter) {
+      result.sortInfo = this.uidFilter;
+    }
+    else {
+      result.sortInfo = [];
+    }
+    this.viewCtrl.dismiss(result);
   }
   
   public clicked(): void {
@@ -169,6 +185,7 @@ export class LeaveFilterPage {
           text: "Select",
           handler: data => {
             this.uidFilter = data;
+            this.anyFilteredNameForDisplay = this.nameList.find((element) => element.uid === data[0]).name;
           }
         }]
     });

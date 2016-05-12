@@ -40,7 +40,7 @@
       <ion-list-header>Filter by</ion-list-header>
       <ion-item>
         <ion-icon name="calendar" item-left></ion-icon>
-        <ion-label>Date from <span primary>{{fromDateFilter | date:'dd|MMM|yyyy'}}</span> <br/>to <span primary>{{toDateFilter | date:'dd|MMM|yyyy'}}</span></ion-label>
+        <ion-label>Date from <span>{{fromDateFilter | date:'dd|MMM|yyyy'}}</span> <br/>to <span>{{toDateFilter | date:'dd|MMM|yyyy'}}</span></ion-label>
         <ion-radio [value]="ctrlValues.dateFilter" (click)="showFromDatePicker()"></ion-radio>
       </ion-item>
       <ion-item>
@@ -63,7 +63,7 @@
       </ion-item>
       <ion-item>
         <ion-icon name="pricetag" item-left></ion-icon>
-        <ion-label>Name</ion-label>
+        <ion-label>Name <p [hidden]="uidFilter[0] == null">{{anyFilteredNameForDisplay}}</p><p [hidden]="uidFilter[1] == null">and more...</p></ion-label>
         <ion-note item-right>Place under arrest</ion-note>
         <ion-radio value="name" [value]="ctrlValues.nameFilter" (click)="showNames()"></ion-radio>  
       </ion-item>

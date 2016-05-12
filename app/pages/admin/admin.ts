@@ -31,6 +31,9 @@ export class AdminPage {
   
   public showFilter() {
     let filterModal = Modal.create(LeaveFilterPage, {names: this.nameList});
+    filterModal.onDismiss((data: {groupBy: string, sortBy: string, sortInfo: Array<string>}) => {
+      console.log(JSON.stringify(data));
+    });
     this.nav.present(filterModal);
   }
   
