@@ -1,5 +1,6 @@
 import {Injectable} from 'angular2/core';
 import {Events} from 'ionic-angular';
+import {LeaveStruct} from '../leave-struct/leave-struct';
 import {FirebaseService} from '../firebase-service/firebase-service';
 
 /*
@@ -38,6 +39,54 @@ export class FirebaseServiceAdmin {
       console.log("Sending:"+JSON.stringify(user));
       this.events.publish("admin:name:changed", user);
     });
+  }
+  
+  public registerAdminForLeaveListing(sort: {by: string, info: Array<string>}): void {
+    this.firebaseService.getRefToBaseUrl().child("leaves").off();
+    switch (sort.by) {
+      case "dateFilter":
+        if(sort.info.length == 2) {
+          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(sort.info[0]).endAt(sort.info[1]).on("child_added", (event) => {
+            if(event != null) {
+              Object.keys(event.val()).forEach((node) => {
+                let leave = new LeaveStruct();
+                let tempObject   = event.val()[node];
+                leave.date       = Number(event.key()), // Get the timestamp
+                leave.approved   = tempObject.approved
+                leave.rejected   = tempObject.rejected,
+                leave.revoked    = tempObject.revoked,
+                leave.reason     = tempObject.reason,
+                leave.uid        = node;
+                console.log("Publishing:"+JSON.stringify(leave));
+                this.events.publish("admin:leave:added", leave);
+              });
+            }
+          });
+          
+          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(sort.info[0]).endAt(sort.info[1]).on("child_changed", (event) => {
+            if(event != null) {
+              let leave = new LeaveStruct();
+              let tempObject = event.val()[Object.keys(event.val())[0]];
+              leave.date       = Number(event.key()), // Get the timestamp
+              leave.approved   = tempObject.approved
+              leave.rejected   = tempObject.rejected,
+              leave.revoked    = tempObject.revoked,
+              leave.reason     = tempObject.reason,
+              leave.uid        = Object.keys(event.val())[0];
+              console.log("Publishing:"+JSON.stringify(leave));
+              this.events.publish("admin:leave:changed", leave);
+            }
+          });
+        }
+        break;
+    
+      default:
+        break;
+    }
+  }
+  
+  public unregisterLeaveEvents(): void {
+    this.firebaseService.getRefToBaseUrl().child("leaves").off();
   }
 }
 

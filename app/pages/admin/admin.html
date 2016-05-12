@@ -18,7 +18,7 @@
   </ion-buttons>
 </ion-navbar>
 
-<ion-content class="admin">
+<ion-content>
   <ion-list>
     <ion-item text-wrap *ngFor="#leave of leaves">
       <h2>{{leave.date | date: 'dd/MMM/yyyy'}}</h2>
@@ -27,7 +27,9 @@
       <p>{{leave.reason}}</p>
     </ion-item> 
   </ion-list>
-  <button primary fab fab-bottom fab-right (click)="showFilter()">
-    <ion-icon name="options"></ion-icon>
-  </button>
+  <ion-fixed class="fixed-div">
+    <button fab primary fab-bottom fab-right (click)="showFilter()">
+      <ion-icon name="options" is-active="false"></ion-icon>
+    </button>
+  </ion-fixed>
 </ion-content>

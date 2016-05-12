@@ -30,6 +30,8 @@ export class AdminPage {
     let filterModal = Modal.create(LeaveFilterPage, {names: this.nameList});
     filterModal.onDismiss((data: {groupBy: string, sortBy: string, sortInfo: Array<string>}) => {
       console.log(JSON.stringify(data));
+      this.leaves = [];
+      this.firebaseAdmin.registerAdminForLeaveListing({by: data.sortBy, info: data.sortInfo});
     });
     this.nav.present(filterModal);
   }
@@ -45,29 +47,24 @@ export class AdminPage {
     this.firebaseAdmin.registerForNamelistEvents();
   }
   
-  private removeLeaveFromList(date: number): LeaveStruct[] {
-    let leaveToDelete = this.isTimestampInList(date);
-    let deletedLeaves: LeaveStruct[] = [];
-    if(leaveToDelete != undefined && leaveToDelete != null) {
-      deletedLeaves = this.leaves.splice(this.leaves.indexOf(leaveToDelete), 1);
-      console.log("Notification: Deleted "+deletedLeaves[0].date+" leave.");
-    }
-    return deletedLeaves;
-  }
+  // private removeLeaveFromList(date: number): LeaveStruct[] {
+  //   let leaveToDelete = this.isLeaveInList(date);
+  //   let deletedLeaves: LeaveStruct[] = [];
+  //   if(leaveToDelete != undefined && leaveToDelete != null) {
+  //     deletedLeaves = this.leaves.splice(this.leaves.indexOf(leaveToDelete), 1);
+  //     console.log("Notification: Deleted "+deletedLeaves[0].date+" leave.");
+  //   }
+  //   return deletedLeaves;
+  // }
   
   private subscribeToLeaveChanges(): void {
-    // this.events.subscribe("user:leaveApplied", (data: LeaveStruct[]) => {
-    //   let isSortingNeeded : boolean = false;
-    //   data.forEach((leave) => {  // Do not add any async calls in this. Otherwise sorting gets affected.
-    //     if(this.isTimestampInList(Number(leave.date)) == undefined) {
-    //       this.leaves.push(leave);
-    //       isSortingNeeded = true;
-    //     }
-    //   });
-    //   if(isSortingNeeded) {
-    //     this.sortLeavesList();
-    //   }
-    // });
+    this.events.subscribe("admin:leave:added", (data: LeaveStruct[]) => {
+      this.addOrUpdateLeave(data);
+    });
+    
+    this.events.subscribe("admin:leave:changed", (data: LeaveStruct[]) => {
+      this.addOrUpdateLeave(data);
+    });
     
     // this.events.subscribe("user:leaveDeleted", (data) => {
     //   data.forEach((timestamp) => {
@@ -79,13 +76,36 @@ export class AdminPage {
     // this.events.subscribe("user:leaveModified", (data) => {
     //   data.forEach((changedData) => {
     //     if(changedData.date != null) {
-    //       let leaveInfo = this.isTimestampInList(changedData.date);
+    //       let leaveInfo = this.isLeaveInList(changedData.date);
     //       if(leaveInfo != undefined && leaveInfo != null && leaveInfo[changedData.key] != null) {
     //         leaveInfo[changedData.key] = changedData.value;
     //       }
     //     }
     //   });
     // });
+  }
+  
+  private addOrUpdateLeave(leaveArray: Array<LeaveStruct>) {
+    let isSortingNeeded : boolean = false;
+      leaveArray.forEach((leave) => {  // Do not add any async calls in this. Otherwise sorting gets affected.
+        let existingLeave: LeaveStruct = this.isLeaveInList(Number(leave.date), leave.uid);
+        if(existingLeave == undefined) {
+          this.leaves.push(leave);
+          isSortingNeeded = true;
+        }
+        else {
+          existingLeave.date     = leave.date;
+          existingLeave.approved = leave.approved;
+          existingLeave.rejected = leave.rejected;
+          existingLeave.revoked  = leave.revoked;
+          existingLeave.reason   = leave.reason;
+          existingLeave.uid      = leave.uid;
+          isSortingNeeded = true;
+        }
+      });
+      if(isSortingNeeded) {
+        this.sortLeavesList();
+      }
   }
   
   private subscribeToNameListChanges() {
@@ -130,8 +150,8 @@ export class AdminPage {
     });
   }
   
-  private isTimestampInList(time: Number): LeaveStruct {
-    return this.leaves.find((element) => element.date == time);
+  private isLeaveInList(time: Number, uid: string): LeaveStruct {
+    return this.leaves.find((element) => element.date == time && element.uid == uid);
   }
   
   private sortLeavesList(): void {

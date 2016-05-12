@@ -9,6 +9,7 @@ export class LeaveStruct{
   public revoked: boolean;
   public rejected: boolean;
   public approved: boolean;
+  public uid: string;
   
   constructor() {
     this.date = this.getTodaysDateAsMilliSec();
@@ -16,6 +17,7 @@ export class LeaveStruct{
     this.revoked = false;
     this.rejected = false;
     this.approved = false;
+    this.uid = "";
   }
   
   public getTodaysDateAsMilliSec(): number {
