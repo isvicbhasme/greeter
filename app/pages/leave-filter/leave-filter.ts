@@ -180,12 +180,14 @@ export class LeaveFilterPage {
       title: "Greeters",
       subTitle: "Choose names to filter...",
       buttons: [
-        {text: "Cancel"},
         {
           text: "Select",
           handler: data => {
-            this.uidFilter = data;
-            this.anyFilteredNameForDisplay = this.nameList.find((element) => element.uid === data[0]).name;
+            let tempName = this.nameList.find((element) => element.uid === data[0]);
+            if(tempName) {
+              this.uidFilter = data;
+              this.anyFilteredNameForDisplay = this.nameList.find((element) => element.uid === data[0]).name;
+            }
           }
         }]
     });

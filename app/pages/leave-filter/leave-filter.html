@@ -62,6 +62,12 @@
         <ion-radio value="revoked" [value]="ctrlValues.revokedFilter"></ion-radio>  
       </ion-item>
       <ion-item>
+        <ion-icon name="timer" item-left></ion-icon>
+        <ion-label>Pending leaves</ion-label>
+        <ion-note item-right>Waiting in the wings</ion-note>
+        <ion-radio value="pending" [value]="ctrlValues.pendingFilter"></ion-radio>  
+      </ion-item>
+      <ion-item>
         <ion-icon name="pricetag" item-left></ion-icon>
         <ion-label>Name <p [hidden]="uidFilter[0] == null">{{anyFilteredNameForDisplay}}</p><p [hidden]="uidFilter[1] == null">and more...</p></ion-label>
         <ion-note item-right>Place under arrest</ion-note>

@@ -6,5 +6,6 @@ export const CTRL_VALUES  = {
   approvedFilter: "approvedFilter",
   rejectedFilter: "rejectedFilter",
   revokedFilter: "revokedFilter",
+  pendingFilter: "pendingFilter",
   nameFilter: "nameFilter"
 }
