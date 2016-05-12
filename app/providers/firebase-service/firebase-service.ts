@@ -36,12 +36,18 @@ export class FirebaseService {
         rejected: false,
         revoked: false,
         reason: leave.reason
-      }, (error) => console.log("Error storing new leave: "+error));
+      }, (error) => {
+        if(error)
+          console.log("Error storing new leave: "+error)
+    });
       leaveDataRef.parent().setPriority(leave.date);
       let leaves = {};
-      leaves[leave.date] = true;
+      leaves[leave.date] = false; // Indicates that leave is in pending state. Should be set to true when approved/rejected/revoked.
       this.getRefToBaseUrl().child("users/"+this.uid+"/leaves/").update(
-        leaves, (error) => console.log("Error storing new leave: "+error));
+        leaves, (error) => {
+          if(error)
+            console.log("Error storing new leave: "+error)
+        });
     }
   }
     
