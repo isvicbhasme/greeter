@@ -19,7 +19,7 @@ import * as Constants from './leave-filter-constants';
 export class LeaveFilterPage {
   private customizeForm: ControlGroup;
   public group: Control;
-  public sort: Control;
+  public filter: Control;
   public fromDateFilter: number;
   public toDateFilter: number;
   public nameList: Array<{uid: string, name: string, username: string}>;
@@ -34,14 +34,14 @@ export class LeaveFilterPage {
               params: NavParams) {
     this.ctrlValues =  Constants.CTRL_VALUES;
     this.group = new Control(Constants.CTRL_VALUES.dateGroup);
-    this.sort = new Control(Constants.CTRL_VALUES.dateFilter);
+    this.filter = new Control(Constants.CTRL_VALUES.dateFilter);
     this.setDefaultDates();
     this.uidFilter = [];
     this.nameList = params.get('names');
     this.anyFilteredNameForDisplay = "";
     this.customizeForm = new ControlGroup({
       "group": this.group,
-      "sort": this.sort
+      "filter": this.filter
     });
   }
   
@@ -51,17 +51,17 @@ export class LeaveFilterPage {
   
   public applyFilter(): void {
     console.log(this.customizeForm.value)
-    let result: {groupBy: string, sortBy: string, sortInfo: Array<string>} = {groupBy: "", sortBy: "", sortInfo: []};
+    let result: {groupBy: string, filterBy: string, filterInfo: Array<string>} = {groupBy: "", filterBy: "", filterInfo: []};
     result.groupBy = this.customizeForm.value.group;
-    result.sortBy = this.customizeForm.value.sort;
-    if(this.customizeForm.value.sort === this.ctrlValues.dateFilter) {
-      result.sortInfo = [this.fromDateFilter.toString(), this.toDateFilter.toString()];
+    result.filterBy = this.customizeForm.value.filter;
+    if(this.customizeForm.value.filter === this.ctrlValues.dateFilter) {
+      result.filterInfo = [this.fromDateFilter.toString(), this.toDateFilter.toString()];
     }
-    else if(this.customizeForm.value.sort === this.ctrlValues.nameFilter) {
-      result.sortInfo = this.uidFilter;
+    else if(this.customizeForm.value.filter === this.ctrlValues.nameFilter) {
+      result.filterInfo = this.uidFilter;
     }
     else {
-      result.sortInfo = [];
+      result.filterInfo = [];
     }
     this.viewCtrl.dismiss(result);
   }

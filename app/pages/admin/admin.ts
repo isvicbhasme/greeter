@@ -28,10 +28,10 @@ export class AdminPage {
   
   public showFilter() {
     let filterModal = Modal.create(LeaveFilterPage, {names: this.nameList});
-    filterModal.onDismiss((data: {groupBy: string, sortBy: string, sortInfo: Array<string>}) => {
+    filterModal.onDismiss((data: {groupBy: string, filterBy: string, filterInfo: Array<string>}) => {
       console.log(JSON.stringify(data));
       this.leaves = [];
-      this.firebaseAdmin.registerAdminForLeaveListing({by: data.sortBy, info: data.sortInfo});
+      this.firebaseAdmin.registerAdminForLeaveListing({by: data.filterBy, info: data.filterInfo});
     });
     this.nav.present(filterModal);
   }
@@ -77,7 +77,7 @@ export class AdminPage {
     //   });
     // });
     
-    // // Changing 'date' does not invoke sort
+    // // Changing 'date' does not invoke filter
     // this.events.subscribe("user:leaveModified", (data) => {
     //   data.forEach((changedData) => {
     //     if(changedData.date != null) {

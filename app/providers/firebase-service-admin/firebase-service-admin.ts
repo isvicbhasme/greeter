@@ -41,12 +41,12 @@ export class FirebaseServiceAdmin {
     });
   }
   
-  public registerAdminForLeaveListing(sort: {by: string, info: Array<string>}): void {
+  public registerAdminForLeaveListing(filter: {by: string, info: Array<string>}): void {
     this.firebaseService.getRefToBaseUrl().child("leaves").off();
-    switch (sort.by) {
+    switch (filter.by) {
       case "dateFilter":
-        if(sort.info.length == 2) {
-          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(sort.info[0]).endAt(sort.info[1]).on("child_added", (event) => {
+        if(filter.info.length == 2) {
+          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_added", (event) => {
             if(event != null) {
               Object.keys(event.val()).forEach((node) => {
                 let leave = new LeaveStruct();
@@ -63,7 +63,7 @@ export class FirebaseServiceAdmin {
             }
           });
           
-          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(sort.info[0]).endAt(sort.info[1]).on("child_changed", (event) => {
+          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_changed", (event) => {
             if(event != null) {
               let leave = new LeaveStruct();
               let tempObject = event.val()[Object.keys(event.val())[0]];
