@@ -45,6 +45,11 @@ export class AdminPage {
     this.subscribeToNameListChanges();
     this.firebaseService.registerForCurrentUserLeaveEvents();
     this.firebaseAdmin.registerForNamelistEvents();
+    let todaysDate = new Date();
+    let beginingOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
+    let fromDateFilter = beginingOfMonth.getTime();
+    let toDateFilter = new Date(beginingOfMonth.getFullYear(), beginingOfMonth.getMonth()+1, beginingOfMonth.getDate()-1).getTime();
+    this.firebaseAdmin.registerAdminForLeaveListing({by: "dateFilter", info: [fromDateFilter.toString(), toDateFilter.toString()]});
   }
   
   // private removeLeaveFromList(date: number): LeaveStruct[] {
