@@ -102,11 +102,17 @@ export class ApplyLeavePage  {
   
   private addNewLeaveToList() {
     if(this.takeOff.reason != null && this.takeOff.reason.length > 0 && this.takeOff.date > 0) {
-      let leave = new LeaveStruct();
-      leave.reason = this.takeOff.reason;
-      leave.date = this.takeOff.date;
-      this.leaves.push(leave);
-      this.sortLeavesList();
+      let leave = this.leaves.find((element) => element.date === this.takeOff.date);
+      if(leave == undefined) {
+        leave = new LeaveStruct();
+        leave.reason = this.takeOff.reason;
+        leave.date = this.takeOff.date;
+        this.leaves.push(leave);
+        this.sortLeavesList();
+      }
+      else {
+        leave.reason = this.takeOff.reason;
+      }
       console.log("Pushed successfully");
     }
   }
