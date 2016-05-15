@@ -283,10 +283,13 @@ export class FirebaseServiceAdmin {
   }
   
   public approveLeave(leave: LeaveStruct): void {
-    let changelist = {};
-    changelist[leave.date+"/"+leave.uid+"/approved"] = true;
-    changelist[leave.date+"/"+leave.uid+"/rejected"] = false;
-    this.firebaseService.getRefToBaseUrl().child("leaves").update(changelist);
+    let leaveChangelist = {};
+    leaveChangelist[leave.date+"/"+leave.uid+"/approved"] = true;
+    leaveChangelist[leave.date+"/"+leave.uid+"/rejected"] = false;
+    this.firebaseService.getRefToBaseUrl().child("leaves").update(leaveChangelist);
+    let userChangelist = {};
+    userChangelist[leave.date] = true;
+    this.firebaseService.getRefToBaseUrl().child("users/"+leave.uid+"/leaves").update(userChangelist);
   }
   
   public rejectLeave(leave: LeaveStruct): void {
@@ -294,6 +297,9 @@ export class FirebaseServiceAdmin {
     changelist[leave.date+"/"+leave.uid+"/approved"] = false;
     changelist[leave.date+"/"+leave.uid+"/rejected"] = true;
     this.firebaseService.getRefToBaseUrl().child("leaves").update(changelist);
+    let userChangelist = {};
+    userChangelist[leave.date] = true;
+    this.firebaseService.getRefToBaseUrl().child("users/"+leave.uid+"/leaves").update(userChangelist);
   }
 }
 
