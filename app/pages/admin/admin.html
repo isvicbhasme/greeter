@@ -22,8 +22,14 @@
   <ion-list>
     <ion-item text-wrap *ngFor="#leave of leaves">
       <h2>{{leave.date | date: 'dd/MMM/yyyy'}}</h2>
-      <ion-badge secondary item-right [hidden]="!leave.approved">approved</ion-badge>
-      <ion-badge danger item-right [hidden]="!leave.rejected">rejected</ion-badge>
+      <div item-right>
+        <button large clear danger (click)="rejectLeave(leave)" [disabled]="leave.rejected || leave.revoked">
+          <ion-icon name="close-circle"></ion-icon>
+        </button>
+        <button large clear primary (click)="approveLeave(leave)" [disabled]="leave.approved || leave.revoked">
+          <ion-icon name="checkmark-circle"></ion-icon>
+        </button>
+      </div>
       <p>{{leave.reason}}</p>
     </ion-item> 
   </ion-list>

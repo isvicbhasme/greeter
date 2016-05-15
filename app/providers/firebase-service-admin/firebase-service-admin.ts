@@ -281,5 +281,19 @@ export class FirebaseServiceAdmin {
   public unregisterLeaveEvents(): void {
     this.firebaseService.getRefToBaseUrl().child("leaves").off();
   }
+  
+  public approveLeave(leave: LeaveStruct): void {
+    let changelist = {};
+    changelist[leave.date+"/"+leave.uid+"/approved"] = true;
+    changelist[leave.date+"/"+leave.uid+"/rejected"] = false;
+    this.firebaseService.getRefToBaseUrl().child("leaves").update(changelist);
+  }
+  
+  public rejectLeave(leave: LeaveStruct): void {
+    let changelist = {};
+    changelist[leave.date+"/"+leave.uid+"/approved"] = false;
+    changelist[leave.date+"/"+leave.uid+"/rejected"] = true;
+    this.firebaseService.getRefToBaseUrl().child("leaves").update(changelist);
+  }
 }
 

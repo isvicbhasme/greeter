@@ -52,6 +52,18 @@ export class AdminPage {
     this.firebaseService.getRefToBaseUrl().unauth();
   }
   
+  public approveLeave(leave: LeaveStruct) {
+    leave.approved = true;
+    leave.rejected = false;
+    this.firebaseAdmin.approveLeave(leave);
+  }
+  
+  public rejectLeave(leave: LeaveStruct) {
+    leave.approved = false;
+    leave.rejected = true;
+    this.firebaseAdmin.rejectLeave(leave);
+  }
+  
   private initializeSelectedFilters(): void {
     let todaysDate = new Date();
     let beginingOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
