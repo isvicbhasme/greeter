@@ -20,19 +20,19 @@
         <ion-icon name="calendar" item-left></ion-icon>
         <ion-label>Month</ion-label>
         <ion-note item-right>Simple and neat</ion-note>
-        <ion-radio checked="true" [value]="ctrlValues.dateGroup"></ion-radio>
+        <ion-radio [value]="ctrlValues.dateGroup"></ion-radio>
       </ion-item>
       <ion-item>
         <ion-icon name="stats" item-left></ion-icon>
         <ion-label>Status</ion-label>
         <ion-note item-right>Separate sheep from goats</ion-note>
-        <ion-radio value="statusGroup" [value]="ctrlValues.statusGroup"></ion-radio>
+        <ion-radio [value]="ctrlValues.statusGroup"></ion-radio>
       </ion-item>
       <ion-item>
         <ion-icon name="pricetag" item-left></ion-icon>
         <ion-label>Name</ion-label>
         <ion-note item-right>Catch the culprit</ion-note>
-        <ion-radio value="nameGroup" [value]="ctrlValues.nameGroup"></ion-radio>  
+        <ion-radio [value]="ctrlValues.nameGroup"></ion-radio>  
       </ion-item>
     </ion-list>
     <p></p>
@@ -47,31 +47,31 @@
         <ion-icon name="thumbs-up" item-left></ion-icon>
         <ion-label>Approved leaves</ion-label>
         <ion-note item-right>Jump for joy</ion-note>
-        <ion-radio value="approved" [value]="ctrlValues.approvedFilter"></ion-radio>
+        <ion-radio [value]="ctrlValues.approvedFilter"></ion-radio>
       </ion-item>
       <ion-item>
         <ion-icon name="thumbs-down" item-left></ion-icon>
         <ion-label>Rejected leaves</ion-label>
         <ion-note item-right>Your heart sinks</ion-note>
-        <ion-radio value="rejected" [value]="ctrlValues.rejectedFilter"></ion-radio>  
+        <ion-radio [value]="ctrlValues.rejectedFilter"></ion-radio>  
       </ion-item>
       <ion-item>
         <ion-icon name="undo" item-left></ion-icon>
         <ion-label>Revoked leaves</ion-label>
         <ion-note item-right>Himalayan blunder</ion-note>
-        <ion-radio value="revoked" [value]="ctrlValues.revokedFilter"></ion-radio>  
+        <ion-radio [value]="ctrlValues.revokedFilter"></ion-radio>  
       </ion-item>
       <ion-item>
         <ion-icon name="timer" item-left></ion-icon>
         <ion-label>Pending leaves</ion-label>
         <ion-note item-right>Waiting in the wings</ion-note>
-        <ion-radio value="pending" [value]="ctrlValues.pendingFilter"></ion-radio>  
+        <ion-radio [value]="ctrlValues.pendingFilter"></ion-radio>  
       </ion-item>
       <ion-item>
         <ion-icon name="pricetag" item-left></ion-icon>
         <ion-label>Name <p [hidden]="uidFilter[0] == null">{{anyFilteredNameForDisplay}}</p><p [hidden]="uidFilter[1] == null">and more...</p></ion-label>
         <ion-note item-right>Place under arrest</ion-note>
-        <ion-radio value="name" [value]="ctrlValues.nameFilter" (click)="showNames()"></ion-radio>  
+        <ion-radio [value]="ctrlValues.nameFilter" (click)="showNames()"></ion-radio>  
       </ion-item>
     </ion-list>
   </form>

@@ -5,6 +5,7 @@ import {NgZone} from 'angular2/core';
 import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
 import {FirebaseService} from '../../providers/firebase-service/firebase-service';
 import * as Constants from '../../util/constants/leave-filter-constants';
+import {LeaveFilterResult} from '../../util/leave-filter-result/leave-filter-result';
 
 /*
   Generated class for the LeaveFilterPage page.
@@ -26,19 +27,22 @@ export class LeaveFilterPage {
   public uidFilter: Array<string>;
   public anyFilteredNameForDisplay: string;
   public ctrlValues;
+  public defaultFilters: LeaveFilterResult;
   
   constructor(public nav: NavController,
               private zone: NgZone,
               private firebaseService: FirebaseService,
               private viewCtrl: ViewController,
               params: NavParams) {
-    this.ctrlValues =  Constants.FILTER_TYPES;
-    this.group = new Control(Constants.FILTER_TYPES.dateGroup);
-    this.filter = new Control(Constants.FILTER_TYPES.dateFilter);
-    this.setDefaultDates();
-    this.uidFilter = [];
-    this.nameList = params.get('names');
     this.anyFilteredNameForDisplay = "";
+    this.uidFilter = [];
+    this.ctrlValues =  Constants.FILTER_TYPES;
+    this.nameList = params.get('names');
+    this.setDefaultFilters(params.get('defaultFilters'));
+    this.group = new Control(this.defaultFilters.groupBy);
+    this.filter = new Control(this.defaultFilters.filterBy);
+    this.setDefaultDates();
+    console.log("Filters:"+JSON.stringify(this.defaultFilters));
     this.customizeForm = new ControlGroup({
       "group": this.group,
       "filter": this.filter
@@ -51,7 +55,7 @@ export class LeaveFilterPage {
   
   public applyFilter(): void {
     console.log(this.customizeForm.value)
-    let result: {groupBy: string, filterBy: string, filterInfo: Array<string>} = {groupBy: "", filterBy: "", filterInfo: []};
+    let result: LeaveFilterResult = {groupBy: "", filterBy: "", filterInfo: []};
     result.groupBy = this.customizeForm.value.group;
     result.filterBy = this.customizeForm.value.filter;
     if(this.customizeForm.value.filter === this.ctrlValues.dateFilter) {
@@ -208,14 +212,28 @@ export class LeaveFilterPage {
   }
   
   private setDefaultDates() {
-    let todaysDate = new Date();
-    let beginingOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
-    this.fromDateFilter = beginingOfMonth.getTime();
-    this.toDateFilter = new Date(beginingOfMonth.getFullYear(), beginingOfMonth.getMonth()+1, beginingOfMonth.getDate()-1).getTime();
+    if(this.defaultFilters.filterBy === Constants.FILTER_TYPES.dateFilter && this.defaultFilters.filterInfo.length === 2) {
+      this.fromDateFilter = Number(this.defaultFilters.filterInfo[0]);
+      this.toDateFilter = Number(this.defaultFilters.filterInfo[1]);
+    }
+    else {
+      let todaysDate = new Date();
+      let beginingOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
+      this.fromDateFilter = beginingOfMonth.getTime();
+      this.toDateFilter = new Date(beginingOfMonth.getFullYear(), beginingOfMonth.getMonth()+1, beginingOfMonth.getDate()-1).getTime();
+    }
   }
   
   private getDateAsString(date: number): string {
     let convertedDate: Date = new Date(date)
     return convertedDate.getFullYear() + "-" + ("0" + (convertedDate.getMonth() + 1)).slice(-2) + "-" + ("0"+convertedDate.getDate()).slice(-2)
+  }
+  
+  private setDefaultFilters(param: LeaveFilterResult): void{
+    this.defaultFilters = param;
+    if(param.filterBy === Constants.FILTER_TYPES.nameFilter) {
+      this.uidFilter = param.filterInfo;
+      this.anyFilteredNameForDisplay = (this.nameList.find((element) => this.uidFilter[0] === element.uid)).name;
+    }
   }
 }

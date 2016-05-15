@@ -4,6 +4,7 @@ import {LeaveFilterPage} from '../leave-filter/leave-filter';
 import {FirebaseService} from '../../providers/firebase-service/firebase-service';
 import {FirebaseServiceAdmin} from '../../providers/firebase-service-admin/firebase-service-admin';
 import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
+import {LeaveFilterResult} from '../../util/leave-filter-result/leave-filter-result';
 import * as Constants from '../../util/constants/leave-filter-constants';
 
 /*
@@ -18,7 +19,7 @@ import * as Constants from '../../util/constants/leave-filter-constants';
 export class AdminPage {
   leaves: Array<LeaveStruct>; 
   nameList: Array<{uid: string, name: string, username: string}>;
-  selectedFilters: {groupBy: string, filterBy: string, filterInfo: Array<string>};
+  selectedFilters: LeaveFilterResult;
   
   constructor(public nav: NavController,
               public firebaseAdmin: FirebaseServiceAdmin,
@@ -27,13 +28,17 @@ export class AdminPage {
               private zone: NgZone) {
     this.leaves = [];
     this.nameList = [];
+    this.initializeSelectedFilters();
     this.initializeFirebaseEvents();
-    this.selectedFilters = {groupBy: "", filterBy: "", filterInfo: []};
   }
   
   public showFilter() {
-    let filterModal = Modal.create(LeaveFilterPage, {names: this.nameList});
-    filterModal.onDismiss((data: {groupBy: string, filterBy: string, filterInfo: Array<string>}) => {
+    let defaultFilterSelection = this.selectedFilters;
+    if(defaultFilterSelection.filterBy != Constants.FILTER_TYPES.dateFilter && defaultFilterSelection.filterBy != Constants.FILTER_TYPES.nameFilter) {
+      defaultFilterSelection.filterInfo = []; // Filter modal does not need filterInfo params for date and name filter
+    }
+    let filterModal = Modal.create(LeaveFilterPage, {names: this.nameList, defaultFilters: defaultFilterSelection});
+    filterModal.onDismiss((data: LeaveFilterResult) => {
       console.log(JSON.stringify(data));
       this.leaves = [];
       this.selectedFilters = data;
@@ -47,17 +52,22 @@ export class AdminPage {
     this.firebaseService.getRefToBaseUrl().unauth();
   }
   
+  private initializeSelectedFilters(): void {
+    let todaysDate = new Date();
+    let beginingOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
+    let fromDateFilter = beginingOfMonth.getTime();
+    let toDateFilter = new Date(beginingOfMonth.getFullYear(), beginingOfMonth.getMonth()+1, beginingOfMonth.getDate()-1).getTime();
+    this.selectedFilters = {groupBy: Constants.FILTER_TYPES.dateGroup, filterBy: Constants.FILTER_TYPES.dateFilter, filterInfo: [fromDateFilter.toString(), toDateFilter.toString()]};
+  }
+  
   private initializeFirebaseEvents(): void {
     this.subscribeToLeaveChanges();
     this.subscribeToNameListChanges();
     this.firebaseService.registerForCurrentUserLeaveEvents();
     this.firebaseAdmin.registerForNamelistEvents();
-    let todaysDate = new Date();
-    let beginingOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
-    let fromDateFilter = beginingOfMonth.getTime();
-    let toDateFilter = new Date(beginingOfMonth.getFullYear(), beginingOfMonth.getMonth()+1, beginingOfMonth.getDate()-1).getTime();
+    
     this.firebaseAdmin.unregisterLeaveEvents();
-    this.firebaseAdmin.registerForLeaveListing({by: Constants.FILTER_TYPES.dateFilter, info: [fromDateFilter.toString(), toDateFilter.toString()]});
+    this.firebaseAdmin.registerForLeaveListing({by: this.selectedFilters.filterBy, info: this.selectedFilters.filterInfo});
   }
   
   private subscribeToLeaveChanges(): void {
