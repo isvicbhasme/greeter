@@ -61,7 +61,11 @@ export class LeaveFilterPage {
       result.filterInfo = this.uidFilter;
     }
     else {
-      result.filterInfo = [];
+      let uidList: Array<string> = [];
+      this.nameList.forEach((data) => {
+        uidList.push(data.uid);
+      });
+      result.filterInfo = uidList;
     }
     this.viewCtrl.dismiss(result);
   }

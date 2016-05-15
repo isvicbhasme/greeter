@@ -1,4 +1,5 @@
 import {Page, Modal, NavController, Events} from 'ionic-angular';
+import {NgZone} from 'angular2/core';
 import {LeaveFilterPage} from '../leave-filter/leave-filter';
 import {FirebaseService} from '../../providers/firebase-service/firebase-service';
 import {FirebaseServiceAdmin} from '../../providers/firebase-service-admin/firebase-service-admin';
@@ -20,7 +21,8 @@ export class AdminPage {
   constructor(public nav: NavController,
               public firebaseAdmin: FirebaseServiceAdmin,
               private firebaseService: FirebaseService,
-              private events: Events) {
+              private events: Events,
+              private zone: NgZone) {
     this.leaves = [];
     this.nameList = [];
     this.initializeFirebaseEvents();
@@ -31,7 +33,8 @@ export class AdminPage {
     filterModal.onDismiss((data: {groupBy: string, filterBy: string, filterInfo: Array<string>}) => {
       console.log(JSON.stringify(data));
       this.leaves = [];
-      this.firebaseAdmin.registerAdminForLeaveListing({by: data.filterBy, info: data.filterInfo});
+      this.firebaseAdmin.unregisterLeaveEvents();
+      this.firebaseAdmin.registerForLeaveListing({by: data.filterBy, info: data.filterInfo});
     });
     this.nav.present(filterModal);
   }
@@ -49,45 +52,22 @@ export class AdminPage {
     let beginingOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
     let fromDateFilter = beginingOfMonth.getTime();
     let toDateFilter = new Date(beginingOfMonth.getFullYear(), beginingOfMonth.getMonth()+1, beginingOfMonth.getDate()-1).getTime();
-    this.firebaseAdmin.registerAdminForLeaveListing({by: "dateFilter", info: [fromDateFilter.toString(), toDateFilter.toString()]});
+    this.firebaseAdmin.unregisterLeaveEvents();
+    this.firebaseAdmin.registerForLeaveListing({by: "dateFilter", info: [fromDateFilter.toString(), toDateFilter.toString()]});
   }
-  
-  // private removeLeaveFromList(date: number): LeaveStruct[] {
-  //   let leaveToDelete = this.isLeaveInList(date);
-  //   let deletedLeaves: LeaveStruct[] = [];
-  //   if(leaveToDelete != undefined && leaveToDelete != null) {
-  //     deletedLeaves = this.leaves.splice(this.leaves.indexOf(leaveToDelete), 1);
-  //     console.log("Notification: Deleted "+deletedLeaves[0].date+" leave.");
-  //   }
-  //   return deletedLeaves;
-  // }
   
   private subscribeToLeaveChanges(): void {
     this.events.subscribe("admin:leave:added", (data: LeaveStruct[]) => {
-      this.addOrUpdateLeave(data);
+      this.zone.run(() => this.addOrUpdateLeave(data));
     });
     
     this.events.subscribe("admin:leave:changed", (data: LeaveStruct[]) => {
-      this.addOrUpdateLeave(data);
+      this.zone.run(()=> this.addOrUpdateLeave(data));
     });
     
-    // this.events.subscribe("user:leaveDeleted", (data) => {
-    //   data.forEach((timestamp) => {
-    //     this.removeLeaveFromList(timestamp);
-    //   });
-    // });
-    
-    // // Changing 'date' does not invoke filter
-    // this.events.subscribe("user:leaveModified", (data) => {
-    //   data.forEach((changedData) => {
-    //     if(changedData.date != null) {
-    //       let leaveInfo = this.isLeaveInList(changedData.date);
-    //       if(leaveInfo != undefined && leaveInfo != null && leaveInfo[changedData.key] != null) {
-    //         leaveInfo[changedData.key] = changedData.value;
-    //       }
-    //     }
-    //   });
-    // });
+    this.events.subscribe("admin:leave:removed", (data: LeaveStruct[]) => {
+      this.zone.run(() => this.removeLeave(data));
+    });
   }
   
   private addOrUpdateLeave(leaveArray: Array<LeaveStruct>) {
@@ -111,6 +91,16 @@ export class AdminPage {
       if(isSortingNeeded) {
         this.sortLeavesList();
       }
+  }
+  
+  private removeLeave(leaveArray: Array<LeaveStruct>) {
+    leaveArray.forEach((leave) => {
+      let leaveToDelete: LeaveStruct = this.isLeaveInList(Number(leave.date), leave.uid);
+      if(leaveToDelete != undefined && leaveToDelete != null) {
+        this.leaves.splice(this.leaves.indexOf(leaveToDelete), 1);
+        console.log("Notification: Deleted "+JSON.stringify(leaveToDelete)+" leave.");
+      }
+    });
   }
   
   private subscribeToNameListChanges() {

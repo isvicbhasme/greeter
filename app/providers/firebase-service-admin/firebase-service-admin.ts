@@ -41,23 +41,22 @@ export class FirebaseServiceAdmin {
     });
   }
   
-  public registerAdminForLeaveListing(filter: {by: string, info: Array<string>}): void {
-    this.firebaseService.getRefToBaseUrl().child("leaves").off();
+  public registerForLeaveListing(filter: {by: string, info: Array<string>}): void {
     switch (filter.by) {
       case "dateFilter":
         if(filter.info.length == 2) {
           this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_added", (event) => {
             if(event != null) {
-              Object.keys(event.val()).forEach((node) => {
+              Object.keys(event.val()).forEach((uid) => {
                 let leave = new LeaveStruct();
-                let tempObject   = event.val()[node];
-                leave.date       = Number(event.key()), // Get the timestamp
-                leave.approved   = tempObject.approved
-                leave.rejected   = tempObject.rejected,
-                leave.revoked    = tempObject.revoked,
-                leave.reason     = tempObject.reason,
-                leave.uid        = node;
-                console.log("Publishing:"+JSON.stringify(leave));
+                let tempObject   = event.val()[uid];
+                leave.date       = Number(event.key()); // Get the timestamp
+                leave.approved   = tempObject.approved;
+                leave.rejected   = tempObject.rejected;
+                leave.revoked    = tempObject.revoked;
+                leave.reason     = tempObject.reason;
+                leave.uid        = uid;
+                console.log("Publishing admin:leave:added for date:"+JSON.stringify(leave));
                 this.events.publish("admin:leave:added", leave);
               });
             }
@@ -65,23 +64,171 @@ export class FirebaseServiceAdmin {
           
           this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_changed", (event) => {
             if(event != null) {
-              let leave = new LeaveStruct();
-              let tempObject = event.val()[Object.keys(event.val())[0]];
-              leave.date       = Number(event.key()), // Get the timestamp
-              leave.approved   = tempObject.approved
-              leave.rejected   = tempObject.rejected,
-              leave.revoked    = tempObject.revoked,
-              leave.reason     = tempObject.reason,
-              leave.uid        = Object.keys(event.val())[0];
-              console.log("Publishing:"+JSON.stringify(leave));
-              this.events.publish("admin:leave:changed", leave);
+              Object.keys(event.val()).forEach((uid) => {
+                let leave = new LeaveStruct();
+                let tempObject = event.val()[uid];
+                leave.date       = Number(event.key()), // Get the timestamp
+                leave.approved   = tempObject.approved,
+                leave.rejected   = tempObject.rejected,
+                leave.revoked    = tempObject.revoked,
+                leave.reason     = tempObject.reason,
+                leave.uid        = uid;
+                console.log("Publishing admin:leave:changed for date:"+JSON.stringify(leave));
+                this.events.publish("admin:leave:changed", leave);
+              });
             }
           });
         }
-        break;
+      break;
+        
+      case "approvedFilter":
+        filter.info.forEach((uid:string) => {
+          if(uid != null && uid.length > 0) {
+            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/approved").equalTo(true).on("child_added", (event) => {
+              if(event != null) {
+                Object.keys(event.val()).forEach((uid) => {
+                  let tempObject   = event.val()[uid];
+                  if(tempObject.approved === true) { // Might not be true for all childred
+                    let leave = new LeaveStruct();
+                    leave.date       = Number(event.key()); // Get the timestamp
+                    leave.approved   = tempObject.approved;
+                    leave.rejected   = tempObject.rejected;
+                    leave.revoked    = tempObject.revoked;
+                    leave.reason     = tempObject.reason;
+                    leave.uid        = uid;
+                    console.log("Publishing admin:leave:added for approved true:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:added", leave);
+                  }
+                });
+              }
+            });
+          }
+        });
+        if(filter.info.length > 0) {
+          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+            if(event != null) {
+              console.log("Received event:"+event.val());
+              Object.keys(event.val()).forEach((uid) => {
+                let tempObject   = event.val()[uid];
+                  let leave = new LeaveStruct();
+                  leave.date       = Number(event.key()), // Get the timestamp
+                  leave.approved   = tempObject.approved,
+                  leave.rejected   = tempObject.rejected,
+                  leave.revoked    = tempObject.revoked,
+                  leave.reason     = tempObject.reason,
+                  leave.uid        = uid;
+                  if(leave.approved === true) {
+                    console.log("Publishing admin:leave:added for approved true:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:added", leave);
+                  } else {
+                    console.log("ublishing admin:leave:removed for approved false:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:removed", leave);
+                  }
+              });
+            }
+          });
+        }
+      break;
+      
+      case "rejectedFilter":
+        filter.info.forEach((uid:string) => {
+          if(uid != null && uid.length > 0) {
+            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/rejected").equalTo(true).on("child_added", (event) => {
+              if(event != null) {
+                Object.keys(event.val()).forEach((uid) => {
+                  let tempObject   = event.val()[uid];
+                  if(tempObject.rejected === true) { // Might not be true for all childred
+                    let leave = new LeaveStruct();
+                    leave.date       = Number(event.key()); // Get the timestamp
+                    leave.approved   = tempObject.approved;
+                    leave.rejected   = tempObject.rejected;
+                    leave.revoked    = tempObject.revoked;
+                    leave.reason     = tempObject.reason;
+                    leave.uid        = uid;
+                    console.log("Publishing admin:leave:added for rejected true:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:added", leave);
+                  }
+                });
+              }
+            });
+          }
+        });
+        if(filter.info.length > 0) {
+          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+            if(event != null) {
+              Object.keys(event.val()).forEach((uid) => {
+                let tempObject   = event.val()[uid];
+                  let leave = new LeaveStruct();
+                  leave.date       = Number(event.key()), // Get the timestamp
+                  leave.approved   = tempObject.approved,
+                  leave.rejected   = tempObject.rejected,
+                  leave.revoked    = tempObject.revoked,
+                  leave.reason     = tempObject.reason,
+                  leave.uid        = uid;
+                  if(leave.rejected === true) {
+                    console.log("Publishing admin:leave:changed for rejected true:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:changed", leave);
+                  } else {
+                    console.log("Publishing admin:leave:removed for rejected false:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:removed", leave);
+                  }
+              });
+            }
+          });
+        }
+      break;
+      
+      case "revokedFilter":
+        filter.info.forEach((uid:string) => {
+          if(uid != null && uid.length > 0) {
+            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/revoked").equalTo(true).on("child_added", (event) => {
+              if(event != null) {
+                Object.keys(event.val()).forEach((uid) => {
+                  let tempObject   = event.val()[uid];
+                  if(tempObject.revoked === true) { // Might not be true for all childred
+                    let leave = new LeaveStruct();
+                    leave.date       = Number(event.key()); // Get the timestamp
+                    leave.approved   = tempObject.approved;
+                    leave.rejected   = tempObject.rejected;
+                    leave.revoked    = tempObject.revoked;
+                    leave.reason     = tempObject.reason;
+                    leave.uid        = uid;
+                    console.log("Publishing admin:leave:added for revoked true:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:added", leave);
+                  }
+                });
+              }
+            });
+          }
+        });
+        
+        if(filter.info.length > 0) {
+          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+            if(event != null) {
+              Object.keys(event.val()).forEach((uid) => {
+                let tempObject   = event.val()[uid];
+                  let leave = new LeaveStruct();
+                  leave.date       = Number(event.key()), // Get the timestamp
+                  leave.approved   = tempObject.approved,
+                  leave.rejected   = tempObject.rejected,
+                  leave.revoked    = tempObject.revoked,
+                  leave.reason     = tempObject.reason,
+                  leave.uid        = uid;
+                  if(leave.revoked === true) {
+                    console.log("Publishing admin:leave:changed for revoked true:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:changed", leave);
+                  } else {
+                    console.log("Publishing admin:leave:changed for revoked false:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:removed", leave);
+                  }
+              });
+            }
+          });
+        }
+      break;
     
       default:
-        break;
+      break;
     }
   }
   
