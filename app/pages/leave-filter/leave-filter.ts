@@ -4,7 +4,7 @@ import {FORM_DIRECTIVES, Control, ControlGroup, FormBuilder, Validators} from 'a
 import {NgZone} from 'angular2/core';
 import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
 import {FirebaseService} from '../../providers/firebase-service/firebase-service';
-import * as Constants from './leave-filter-constants';
+import * as Constants from '../../util/constants/leave-filter-constants';
 
 /*
   Generated class for the LeaveFilterPage page.
@@ -32,9 +32,9 @@ export class LeaveFilterPage {
               private firebaseService: FirebaseService,
               private viewCtrl: ViewController,
               params: NavParams) {
-    this.ctrlValues =  Constants.CTRL_VALUES;
-    this.group = new Control(Constants.CTRL_VALUES.dateGroup);
-    this.filter = new Control(Constants.CTRL_VALUES.dateFilter);
+    this.ctrlValues =  Constants.FILTER_TYPES;
+    this.group = new Control(Constants.FILTER_TYPES.dateGroup);
+    this.filter = new Control(Constants.FILTER_TYPES.dateFilter);
     this.setDefaultDates();
     this.uidFilter = [];
     this.nameList = params.get('names');

@@ -4,6 +4,7 @@ import {LeaveFilterPage} from '../leave-filter/leave-filter';
 import {FirebaseService} from '../../providers/firebase-service/firebase-service';
 import {FirebaseServiceAdmin} from '../../providers/firebase-service-admin/firebase-service-admin';
 import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
+import * as Constants from '../../util/constants/leave-filter-constants';
 
 /*
   Generated class for the AdminPage page.
@@ -17,6 +18,7 @@ import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
 export class AdminPage {
   leaves: Array<LeaveStruct>; 
   nameList: Array<{uid: string, name: string, username: string}>;
+  selectedFilters: {groupBy: string, filterBy: string, filterInfo: Array<string>};
   
   constructor(public nav: NavController,
               public firebaseAdmin: FirebaseServiceAdmin,
@@ -26,6 +28,7 @@ export class AdminPage {
     this.leaves = [];
     this.nameList = [];
     this.initializeFirebaseEvents();
+    this.selectedFilters = {groupBy: "", filterBy: "", filterInfo: []};
   }
   
   public showFilter() {
@@ -33,6 +36,7 @@ export class AdminPage {
     filterModal.onDismiss((data: {groupBy: string, filterBy: string, filterInfo: Array<string>}) => {
       console.log(JSON.stringify(data));
       this.leaves = [];
+      this.selectedFilters = data;
       this.firebaseAdmin.unregisterLeaveEvents();
       this.firebaseAdmin.registerForLeaveListing({by: data.filterBy, info: data.filterInfo});
     });
@@ -53,7 +57,7 @@ export class AdminPage {
     let fromDateFilter = beginingOfMonth.getTime();
     let toDateFilter = new Date(beginingOfMonth.getFullYear(), beginingOfMonth.getMonth()+1, beginingOfMonth.getDate()-1).getTime();
     this.firebaseAdmin.unregisterLeaveEvents();
-    this.firebaseAdmin.registerForLeaveListing({by: "dateFilter", info: [fromDateFilter.toString(), toDateFilter.toString()]});
+    this.firebaseAdmin.registerForLeaveListing({by: Constants.FILTER_TYPES.dateFilter, info: [fromDateFilter.toString(), toDateFilter.toString()]});
   }
   
   private subscribeToLeaveChanges(): void {

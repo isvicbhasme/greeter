@@ -1,4 +1,4 @@
-export const CTRL_VALUES  = {
+export const FILTER_TYPES  = {
   dateGroup: "dateGroup",
   statusGroup: "statusGroup",
   nameGroup: "nameGroup",

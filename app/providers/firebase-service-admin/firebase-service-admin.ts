@@ -2,6 +2,7 @@ import {Injectable} from 'angular2/core';
 import {Events} from 'ionic-angular';
 import {LeaveStruct} from '../leave-struct/leave-struct';
 import {FirebaseService} from '../firebase-service/firebase-service';
+import * as Constants from '../../util/constants/leave-filter-constants';
 
 /*
   Generated class for the FirebaseServiceAdmin provider.
@@ -43,7 +44,7 @@ export class FirebaseServiceAdmin {
   
   public registerForLeaveListing(filter: {by: string, info: Array<string>}): void {
     switch (filter.by) {
-      case "dateFilter":
+      case Constants.FILTER_TYPES.dateFilter:
         if(filter.info.length == 2) {
           this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_added", (event) => {
             if(event != null) {
@@ -81,7 +82,7 @@ export class FirebaseServiceAdmin {
         }
       break;
         
-      case "approvedFilter":
+      case Constants.FILTER_TYPES.approvedFilter:
         filter.info.forEach((uid:string) => {
           if(uid != null && uid.length > 0) {
             this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/approved").equalTo(true).on("child_added", (event) => {
@@ -130,7 +131,7 @@ export class FirebaseServiceAdmin {
         }
       break;
       
-      case "rejectedFilter":
+      case Constants.FILTER_TYPES.rejectedFilter:
         filter.info.forEach((uid:string) => {
           if(uid != null && uid.length > 0) {
             this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/rejected").equalTo(true).on("child_added", (event) => {
@@ -178,7 +179,7 @@ export class FirebaseServiceAdmin {
         }
       break;
       
-      case "revokedFilter":
+      case Constants.FILTER_TYPES.revokedFilter:
         filter.info.forEach((uid:string) => {
           if(uid != null && uid.length > 0) {
             this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/revoked").equalTo(true).on("child_added", (event) => {
