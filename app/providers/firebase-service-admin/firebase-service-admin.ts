@@ -227,6 +227,51 @@ export class FirebaseServiceAdmin {
           });
         }
       break;
+      
+      case Constants.FILTER_TYPES.nameFilter:
+        filter.info.forEach((uid:string) => {
+          if(uid != null && uid.length > 0) {
+            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid).on("child_added", (event) => {
+              if(event != null) {
+                Object.keys(event.val()).forEach((uid) => {
+                  if(filter.info.indexOf(uid) > -1) {
+                    let tempObject   = event.val()[uid];
+                    let leave = new LeaveStruct();
+                    leave.date       = Number(event.key());
+                    leave.approved   = tempObject.approved;
+                    leave.rejected   = tempObject.rejected;
+                    leave.revoked    = tempObject.revoked;
+                    leave.reason     = tempObject.reason;
+                    leave.uid        = uid;
+                    console.log("Publishing admin:leave:added for name:"+JSON.stringify(leave));
+                    this.events.publish("admin:leave:added", leave);
+                  }
+                });
+              }
+            });
+          }
+        });
+        if(filter.info.length > 0) {
+          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+            if(event != null) {
+              Object.keys(event.val()).forEach((uid) => {
+                if(filter.info.indexOf(uid) > -1) {
+                  let tempObject   = event.val()[uid];
+                  let leave = new LeaveStruct();
+                  leave.date       = Number(event.key()), // Get the timestamp
+                  leave.approved   = tempObject.approved,
+                  leave.rejected   = tempObject.rejected,
+                  leave.revoked    = tempObject.revoked,
+                  leave.reason     = tempObject.reason,
+                  leave.uid        = uid;
+                  console.log("Publishing admin:leave:changed for name:"+JSON.stringify(leave));
+                  this.events.publish("admin:leave:changed", leave);
+                }
+              });
+            }
+          });
+        }
+      break;
     
       default:
       break;
