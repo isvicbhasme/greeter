@@ -141,6 +141,51 @@ class StatusClassifier implements Classifier {
   }
 }
 
+class NameClassifier implements Classifier {
+  sectionTypes: Array<{key: string, title: string}>;
+  
+  constructor(private userList: Array<{uid: string, name: string, username: string}>) {
+    this.sectionTypes = [];
+  }
+  
+  public addToUserList(user: {uid: string, name: string, username: string}) {
+    this.sectionTypes.push({key: user.uid, title: user.name + " ("+user.username+")"});
+  }
+  
+  public updateUser(user: {uid: string, name: string, username: string}) {
+    let sectionType = this.sectionTypes.find((section) => section.key === user.uid);
+    sectionType.title = user.name + " ("+user.username+")";
+  }
+  
+  public classify(leave: LeaveStruct, container: Array<Section>): Section {
+    if(container.length != this.sectionTypes.length) {
+      this.createSections(container);
+    }
+    else {
+      for(let i=0; i<container.length; ++i) {
+        let section: Section = container[i];
+        let found = this.sectionTypes.find((validSection) => section.key === validSection.key);
+        if(found === undefined) {
+          this.createSections(container);
+          break;
+        }
+      }
+    }
+    let section: Section = {key: undefined, title: undefined, leavesSublist: undefined};
+    section = container.find((section) => section.key === leave.uid);
+    section.leavesSublist.push(leave);
+    return section;
+  }
+  
+  public createSections(container: Array<Section>) {
+    while(container.pop() != undefined);
+    this.sectionTypes.forEach((type) => {
+      let section: Section = {key: type.key, title: type.title, leavesSublist: [] };
+      container.push(section);
+    });
+  }
+}
+
 @Page({
   templateUrl: 'build/pages/admin/admin.html'
 })
@@ -150,6 +195,7 @@ export class AdminPage {
   selectedFilters: LeaveFilterResult;
   private dateClassifier: DateClassifier;
   private statusClassifier: StatusClassifier;
+  private nameClassifier: NameClassifier;
   
   
   constructor(public nav: NavController,
@@ -161,6 +207,7 @@ export class AdminPage {
     this.nameList = [];
     this.dateClassifier = new DateClassifier();
     this.statusClassifier = new StatusClassifier();
+    this.nameClassifier = new NameClassifier(this.nameList);
     this.initializeSelectedFilters();
     this.initializeFirebaseEvents();
   }
@@ -273,6 +320,7 @@ export class AdminPage {
         if(user.uid !== this.firebaseService.getMyUid()) {
           console.log("Adding:"+JSON.stringify(user));
           this.nameList.push(user);
+          this.zone.run(() => this.nameClassifier.addToUserList(user));
           isSortingNeeded = true;
         }
       });
@@ -288,6 +336,8 @@ export class AdminPage {
         if(changedUser != null) {
           changedUser.name = user.name;
           changedUser.username = user.username;
+          console.log("updating user list");
+          this.zone.run(() => this.nameClassifier.updateUser(user));
           isSortingNeeded = true;
         }
       });
@@ -343,6 +393,7 @@ export class AdminPage {
       break;
       
       case Constants.FILTER_TYPES.nameGroup:
+      updatedSection = this.nameClassifier.classify(leave, this.leaves);
       break;
     }
     if(updatedSection != undefined) {
