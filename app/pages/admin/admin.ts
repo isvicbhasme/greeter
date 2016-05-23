@@ -5,6 +5,7 @@ import {FirebaseService} from '../../providers/firebase-service/firebase-service
 import {FirebaseServiceAdmin} from '../../providers/firebase-service-admin/firebase-service-admin';
 import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
 import {LeaveFilterResult} from '../../util/leave-filter-result/leave-filter-result';
+import {EllipsisPipe} from '../../util/ellipsis-pipe/ellipsis-pipe';
 import * as Constants from '../../util/constants/leave-filter-constants';
 
 class Section {
@@ -187,7 +188,8 @@ class NameClassifier implements Classifier {
 }
 
 @Page({
-  templateUrl: 'build/pages/admin/admin.html'
+  templateUrl: 'build/pages/admin/admin.html',
+  pipes: [EllipsisPipe]
 })
 export class AdminPage {
   leaves: Array<Section>; 
@@ -382,7 +384,9 @@ export class AdminPage {
   }
   
   private addLeaveToASection(leave: LeaveStruct): void {
-    let updatedSection: Section = undefined
+    let updatedSection: Section = undefined;
+    let user = this.nameList.find((user) => user.uid === leave.uid);
+    leave.displayName = user.name + " (" + user.username + ")";
     switch(this.selectedFilters.groupBy) {
       case Constants.FILTER_TYPES.dateGroup:
         updatedSection = this.dateClassifier.classify(leave, this.leaves);

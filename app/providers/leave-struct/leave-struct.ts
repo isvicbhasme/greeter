@@ -10,6 +10,7 @@ export class LeaveStruct{
   public rejected: boolean;
   public approved: boolean;
   public uid: string;
+  public displayName: string;
   
   constructor() {
     this.date = this.getTodaysDateAsMilliSec();
@@ -18,6 +19,7 @@ export class LeaveStruct{
     this.rejected = false;
     this.approved = false;
     this.uid = "";
+    this.displayName = "";
   }
   
   public getTodaysDateAsMilliSec(): number {
