@@ -16,11 +16,12 @@ class Section {
 interface Classifier {
   sectionTypes: Array<{key: string, title: string}>;
   classify(leave: LeaveStruct, container: Array<Section>): Section;
+  createSections(container: Array<Section>): void;
 }
 
 class DateClassifier implements Classifier {
   
-  sectionTypes: Array<{key: string, title: string}>
+  sectionTypes: Array<{key: string, title: string}>;
   private future: number;
   private nextMonth: number;
   private currentMonth: number;
@@ -40,43 +41,103 @@ class DateClassifier implements Classifier {
   }
   
   public classify(leave: LeaveStruct, container: Array<Section>): Section {
-    if( container.length != this.sectionTypes.length ||
-        Object.keys(container[0])[0] === this.sectionTypes[0].key ||
-        Object.keys(container[1])[0] === this.sectionTypes[0].key ||
-        Object.keys(container[2])[0] === this.sectionTypes[0].key ||
-        Object.keys(container[3])[0] === this.sectionTypes[0].key ||
-        Object.keys(container[4])[0] === this.sectionTypes[0].key) {
-        while(container.pop() != undefined);
-        this.sectionTypes.forEach((type) => {
-          let section: Section = {key: type.key, title: type.title, leavesSublist: [] };
-          console.log("Pushing:"+JSON.stringify(section));
-          container.push(section);
-        });
-        console.log("Final object:"+JSON.stringify(container));
+    if(container.length != this.sectionTypes.length) {
+      this.createSections(container);
+    }
+    else {
+      for(let i=0; i<container.length; ++i) {
+        let section: Section = container[i];
+        let found = this.sectionTypes.find((validSection) => section.key === validSection.key);
+        if(found === undefined) {
+          this.createSections(container);
+          break;
+        }
       }
-      let section: Section = {key: undefined, title: undefined, leavesSublist: undefined};
-      let monthOfLeave: number = new Date(leave.date).getMonth(); 
-      if(monthOfLeave >= this.future) {
-        section = container.find((arg) => arg.key === this.sectionTypes[0].key);
-        section.leavesSublist.push(leave);
-      }
-      else if(monthOfLeave === this.nextMonth) {
-        section = container.find((arg) => arg.key === this.sectionTypes[1].key);
-        section.leavesSublist.push(leave);
-      }
-      else if(monthOfLeave === this.currentMonth) {
-        section = container.find((arg) => arg.key === this.sectionTypes[2].key);
-        section.leavesSublist.push(leave);
-      }
-      else if (monthOfLeave === this.lastMonth) {
-        section = container.find((arg) => arg.key === this.sectionTypes[3].key);
-        section.leavesSublist.push(leave);
-      }
-      else {
-        section = container.find((arg) => arg.key === this.sectionTypes[4].key);
-        section.leavesSublist.push(leave);
-      }
+    }
+    let section: Section = {key: undefined, title: undefined, leavesSublist: undefined};
+    let monthOfLeave: number = new Date(leave.date).getMonth(); 
+    if(monthOfLeave >= this.future) {
+      section = container.find((arg) => arg.key === this.sectionTypes[0].key);
+      section.leavesSublist.push(leave);
+    }
+    else if(monthOfLeave === this.nextMonth) {
+      section = container.find((arg) => arg.key === this.sectionTypes[1].key);
+      section.leavesSublist.push(leave);
+    }
+    else if(monthOfLeave === this.currentMonth) {
+      section = container.find((arg) => arg.key === this.sectionTypes[2].key);
+      section.leavesSublist.push(leave);
+    }
+    else if (monthOfLeave === this.lastMonth) {
+      section = container.find((arg) => arg.key === this.sectionTypes[3].key);
+      section.leavesSublist.push(leave);
+    }
+    else {
+      section = container.find((arg) => arg.key === this.sectionTypes[4].key);
+      section.leavesSublist.push(leave);
+    }
     return section;
+  }
+  
+  public createSections(container: Array<Section>) {
+    while(container.pop() != undefined);
+    this.sectionTypes.forEach((type) => {
+      let section: Section = {key: type.key, title: type.title, leavesSublist: [] };
+      container.push(section);
+    });
+  }
+}
+
+class StatusClassifier implements Classifier {
+  sectionTypes: Array<{key: string, title: string}>;
+  
+  constructor() {
+    this.sectionTypes = [ {key: "approved", title: "Approved ..."},
+                          {key: "rejected", title: "Rejected ..."},
+                          {key: "pending",  title: "Pending ..."},
+                          {key: "revoked",  title: "Revoked ..."}];
+  }
+  
+  public classify(leave: LeaveStruct, container: Array<Section>): Section {
+    if(container.length != this.sectionTypes.length) {
+      this.createSections(container);
+    }
+    else {
+      for(let i=0; i<container.length; ++i) {
+        let section: Section = container[i];
+        let found = this.sectionTypes.find((validSection) => section.key === validSection.key);
+        if(found === undefined) {
+          this.createSections(container);
+          break;
+        }
+      }
+    }
+    let section: Section = {key: undefined, title: undefined, leavesSublist: undefined};
+    if(leave.revoked) {
+      section = container.find((arg) => arg.key === this.sectionTypes[3].key);
+      section.leavesSublist.push(leave);
+    }
+    else if(leave.approved) {
+      section = container.find((arg) => arg.key === this.sectionTypes[0].key);
+      section.leavesSublist.push(leave);
+    }
+    else if(leave.rejected) {
+      section = container.find((arg) => arg.key === this.sectionTypes[1].key);
+      section.leavesSublist.push(leave);
+    }
+    else {
+      section = container.find((arg) => arg.key === this.sectionTypes[2].key);
+      section.leavesSublist.push(leave);
+    }
+    return section;
+  }
+  
+  public createSections(container: Array<Section>) {
+    while(container.pop() != undefined);
+    this.sectionTypes.forEach((type) => {
+      let section: Section = {key: type.key, title: type.title, leavesSublist: [] };
+      container.push(section);
+    });
   }
 }
 
@@ -88,6 +149,8 @@ export class AdminPage {
   nameList: Array<{uid: string, name: string, username: string}>;
   selectedFilters: LeaveFilterResult;
   private dateClassifier: DateClassifier;
+  private statusClassifier: StatusClassifier;
+  
   
   constructor(public nav: NavController,
               public firebaseAdmin: FirebaseServiceAdmin,
@@ -97,6 +160,7 @@ export class AdminPage {
     this.leaves = [];
     this.nameList = [];
     this.dateClassifier = new DateClassifier();
+    this.statusClassifier = new StatusClassifier();
     this.initializeSelectedFilters();
     this.initializeFirebaseEvents();
   }
@@ -275,6 +339,7 @@ export class AdminPage {
       break;
       
       case Constants.FILTER_TYPES.statusGroup:
+        updatedSection = this.statusClassifier.classify(leave, this.leaves);
       break;
       
       case Constants.FILTER_TYPES.nameGroup:
