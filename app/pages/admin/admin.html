@@ -19,19 +19,26 @@
 </ion-navbar>
 
 <ion-content>
-  <ion-list>
-    <ion-item text-wrap *ngFor="#leave of leaves">
-      <h2>{{leave.date | date: 'dd/MMM/yyyy'}}</h2>
-      <div item-right>
-        <button large clear danger (click)="rejectLeave(leave)" [disabled]="leave.rejected || leave.revoked">
-          <ion-icon name="close-circle"></ion-icon>
-        </button>
-        <button large clear primary (click)="approveLeave(leave)" [disabled]="leave.approved || leave.revoked">
-          <ion-icon name="checkmark-circle"></ion-icon>
-        </button>
+  <ion-list no-lines>
+    <ion-item-group>
+      <div *ngFor="#section of leaves">
+        <div *ngIf="section.leavesSublist.length > 0">
+          <ion-item-divider light>{{section.title | uppercase}}</ion-item-divider>
+          <ion-item text-wrap *ngFor="#leave of section.leavesSublist">
+            <h2>{{leave.date | date: 'dd/MMM/yyyy'}}</h2>
+            <div item-right>
+              <button large clear danger (click)="rejectLeave(leave)" [disabled]="leave.rejected || leave.revoked">
+                <ion-icon name="close-circle"></ion-icon>
+              </button>
+              <button large clear primary (click)="approveLeave(leave)" [disabled]="leave.approved || leave.revoked">
+                <ion-icon name="checkmark-circle"></ion-icon>
+              </button>
+            </div>
+            <p>{{leave.reason}}</p>
+          </ion-item>
+        </div>
       </div>
-      <p>{{leave.reason}}</p>
-    </ion-item> 
+    </ion-item-group>
   </ion-list>
   <ion-fixed class="fixed-div">
     <button fab primary fab-bottom fab-right (click)="showFilter()">

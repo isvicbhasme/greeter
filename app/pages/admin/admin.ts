@@ -7,19 +7,87 @@ import {LeaveStruct} from '../../providers/leave-struct/leave-struct';
 import {LeaveFilterResult} from '../../util/leave-filter-result/leave-filter-result';
 import * as Constants from '../../util/constants/leave-filter-constants';
 
-/*
-  Generated class for the AdminPage page.
+class Section {
+  constructor(public key: string, public title: string, public leavesSublist: Array<LeaveStruct>) {
+    
+  }
+}
 
-  See http://ionicframework.com/docs/v2/components/#navigation for more info on
-  Ionic pages and navigation.
-*/
+interface Classifier {
+  sectionTypes: Array<{key: string, title: string}>;
+  classify(leave: LeaveStruct, container: Array<Section>): Section;
+}
+
+class DateClassifier implements Classifier {
+  
+  sectionTypes: Array<{key: string, title: string}>
+  private future: number;
+  private nextMonth: number;
+  private currentMonth: number;
+  private lastMonth: number;
+  
+  constructor() {
+    this.sectionTypes = [ {key: "AfterNextMonth", title: "Way ahead in the future ..."},
+                          {key: "nextMonth", title: "Next month ..."},
+                          {key: "thisMonth", title: "This month ..."},
+                          {key: "lastMonth", title: "Last month ..."},
+                          {key: "longAgo",   title: "Long ago ..."  }];
+    let todaysDate = new Date();
+    this.currentMonth = todaysDate.getMonth();
+    this.future = new Date(todaysDate.getFullYear(), todaysDate.getMonth() + 2, todaysDate.getDate()).getMonth();
+    this.nextMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth() + 1, todaysDate.getDate()).getMonth();
+    this.lastMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth() - 1, todaysDate.getDate()).getMonth();
+  }
+  
+  public classify(leave: LeaveStruct, container: Array<Section>): Section {
+    if( container.length != this.sectionTypes.length ||
+        Object.keys(container[0])[0] === this.sectionTypes[0].key ||
+        Object.keys(container[1])[0] === this.sectionTypes[0].key ||
+        Object.keys(container[2])[0] === this.sectionTypes[0].key ||
+        Object.keys(container[3])[0] === this.sectionTypes[0].key ||
+        Object.keys(container[4])[0] === this.sectionTypes[0].key) {
+        while(container.pop() != undefined);
+        this.sectionTypes.forEach((type) => {
+          let section: Section = {key: type.key, title: type.title, leavesSublist: [] };
+          console.log("Pushing:"+JSON.stringify(section));
+          container.push(section);
+        });
+        console.log("Final object:"+JSON.stringify(container));
+      }
+      let section: Section = {key: undefined, title: undefined, leavesSublist: undefined};
+      let monthOfLeave: number = new Date(leave.date).getMonth(); 
+      if(monthOfLeave >= this.future) {
+        section = container.find((arg) => arg.key === this.sectionTypes[0].key);
+        section.leavesSublist.push(leave);
+      }
+      else if(monthOfLeave === this.nextMonth) {
+        section = container.find((arg) => arg.key === this.sectionTypes[1].key);
+        section.leavesSublist.push(leave);
+      }
+      else if(monthOfLeave === this.currentMonth) {
+        section = container.find((arg) => arg.key === this.sectionTypes[2].key);
+        section.leavesSublist.push(leave);
+      }
+      else if (monthOfLeave === this.lastMonth) {
+        section = container.find((arg) => arg.key === this.sectionTypes[3].key);
+        section.leavesSublist.push(leave);
+      }
+      else {
+        section = container.find((arg) => arg.key === this.sectionTypes[4].key);
+        section.leavesSublist.push(leave);
+      }
+    return section;
+  }
+}
+
 @Page({
   templateUrl: 'build/pages/admin/admin.html'
 })
 export class AdminPage {
-  leaves: Array<LeaveStruct>; 
+  leaves: Array<Section>; 
   nameList: Array<{uid: string, name: string, username: string}>;
   selectedFilters: LeaveFilterResult;
+  private dateClassifier: DateClassifier;
   
   constructor(public nav: NavController,
               public firebaseAdmin: FirebaseServiceAdmin,
@@ -28,6 +96,7 @@ export class AdminPage {
               private zone: NgZone) {
     this.leaves = [];
     this.nameList = [];
+    this.dateClassifier = new DateClassifier();
     this.initializeSelectedFilters();
     this.initializeFirebaseEvents();
   }
@@ -98,34 +167,38 @@ export class AdminPage {
   
   private addOrUpdateLeave(leaveArray: Array<LeaveStruct>) {
     let isSortingNeeded : boolean = false;
+    let searchResult: {section: Section, leave: LeaveStruct} = {section: undefined, leave: undefined};
+    console.log("leaveArray:"+JSON.stringify(leaveArray));
       leaveArray.forEach((leave) => {  // Do not add any async calls in this. Otherwise sorting gets affected.
-        let existingLeave: LeaveStruct = this.isLeaveInList(Number(leave.date), leave.uid);
-        if(existingLeave == undefined) {
-          this.leaves.push(leave);
-          isSortingNeeded = true;
+        searchResult = this.searchLeave(Number(leave.date), leave.uid);
+        if(searchResult.leave == undefined) {
+          this.addLeaveToASection(leave);
+          console.log("Leaves object:"+JSON.stringify(this.leaves));
         }
         else {
-          existingLeave.date     = leave.date;
-          existingLeave.approved = leave.approved;
-          existingLeave.rejected = leave.rejected;
-          existingLeave.revoked  = leave.revoked;
-          existingLeave.reason   = leave.reason;
-          existingLeave.uid      = leave.uid;
+          searchResult.leave.date     = leave.date;
+          searchResult.leave.approved = leave.approved;
+          searchResult.leave.rejected = leave.rejected;
+          searchResult.leave.revoked  = leave.revoked;
+          searchResult.leave.reason   = leave.reason;
+          searchResult.leave.uid      = leave.uid;
           isSortingNeeded = true;
         }
       });
       if(isSortingNeeded) {
-        this.sortLeavesList();
+        this.sortLeavesSection(searchResult.section);
       }
   }
   
   private removeLeave(leaveArray: Array<LeaveStruct>) {
-    leaveArray.forEach((leave) => {
-      let leaveToDelete: LeaveStruct = this.isLeaveInList(Number(leave.date), leave.uid);
-      if(leaveToDelete != undefined && leaveToDelete != null) {
-        this.leaves.splice(this.leaves.indexOf(leaveToDelete), 1);
-        console.log("Notification: Deleted "+JSON.stringify(leaveToDelete)+" leave.");
-      }
+    this.leaves.forEach((section) => {
+      leaveArray.forEach((leave) => {
+        let leaveToDelete: LeaveStruct = this.isLeaveInSection(Number(leave.date), leave.uid, section);
+        if(leaveToDelete != undefined && leaveToDelete != null) {
+          this.leaves.splice(section.leavesSublist.indexOf(leaveToDelete), 1);
+          console.log("Notification: Deleted "+JSON.stringify(leaveToDelete)+" leave.");
+        }
+      });
     });
   }
   
@@ -171,11 +244,44 @@ export class AdminPage {
     });
   }
   
-  private isLeaveInList(time: Number, uid: string): LeaveStruct {
-    return this.leaves.find((element) => element.date == time && element.uid == uid);
+  private isLeaveInSection(time: number, uid: string, section: Section) {
+    return section.leavesSublist.find((element) => element.date == time && element.uid == uid);
+  }
+    
+  private sortLeavesSection(section: Section): void {
+      section.leavesSublist.sort((a, b) => a.date - b.date); // Multiply by -1 for descending order. That simple... ;)
   }
   
-  private sortLeavesList(): void {
-    this.leaves.sort((a, b) => a.date - b.date); // Multiply by -1 for descending order. That simple... ;)
+  private searchLeave(time: number, uid: string): {section: Section, leave: LeaveStruct} {
+    let foundElement: {section: Section, leave: LeaveStruct} = {section: undefined, leave: undefined};
+    for(let index: number = 0; index < this.leaves.length; ++index) {
+      let section: Section = this.leaves[index];
+      console.log("Searching in section "+JSON.stringify(section));
+      let leaveReference = this.isLeaveInSection(time, uid, section);
+      if(leaveReference != undefined) {
+        foundElement.section = section;
+        foundElement.leave = leaveReference;
+        break;
+      }
+    }
+    return foundElement;
+  }
+  
+  private addLeaveToASection(leave: LeaveStruct): void {
+    let updatedSection: Section = undefined
+    switch(this.selectedFilters.groupBy) {
+      case Constants.FILTER_TYPES.dateGroup:
+        updatedSection = this.dateClassifier.classify(leave, this.leaves);
+      break;
+      
+      case Constants.FILTER_TYPES.statusGroup:
+      break;
+      
+      case Constants.FILTER_TYPES.nameGroup:
+      break;
+    }
+    if(updatedSection == undefined) {
+      this.sortLeavesSection(updatedSection);
+    }
   }
 }
