@@ -280,7 +280,7 @@ export class AdminPage {
       case Constants.FILTER_TYPES.nameGroup:
       break;
     }
-    if(updatedSection == undefined) {
+    if(updatedSection != undefined) {
       this.sortLeavesSection(updatedSection);
     }
   }
