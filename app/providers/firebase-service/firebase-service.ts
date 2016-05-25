@@ -59,6 +59,9 @@ export class FirebaseService {
   
   public revokeLeave(timestamp: number) {
     this.updateLeaveAttribute<boolean>({timestamp: timestamp, key: "revoked", value: true});
+    let userChangelist = {};
+    userChangelist[timestamp] = true;
+    this.getRefToBaseUrl().child("users/"+this.uid+"/leaves").update(userChangelist);
   }
   
   private updateLeaveAttribute<T>(changelist: {timestamp: number, key: string, value: T}) {
