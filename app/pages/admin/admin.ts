@@ -308,8 +308,8 @@ export class AdminPage {
       leaveArray.forEach((leave) => {
         let leaveToDelete: LeaveStruct = this.isLeaveInSection(Number(leave.date), leave.uid, section);
         if(leaveToDelete != undefined && leaveToDelete != null) {
-          this.leaves.splice(section.leavesSublist.indexOf(leaveToDelete), 1);
-          console.log("Notification: Deleted "+JSON.stringify(leaveToDelete)+" leave.");
+          let deleted = section.leavesSublist.splice(section.leavesSublist.indexOf(leaveToDelete), 1);
+          console.log("Notification: Deleted "+JSON.stringify(deleted)+" leave.");
         }
       });
     });
@@ -360,7 +360,7 @@ export class AdminPage {
     });
   }
   
-  private isLeaveInSection(time: number, uid: string, section: Section) {
+  private isLeaveInSection(time: number, uid: string, section: Section): LeaveStruct {
     return section.leavesSublist.find((element) => element.date == time && element.uid == uid);
   }
     

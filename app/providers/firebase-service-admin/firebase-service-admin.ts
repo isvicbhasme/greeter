@@ -208,24 +208,80 @@ export class FirebaseServiceAdmin {
             if(event != null) {
               Object.keys(event.val()).forEach((uid) => {
                 let tempObject   = event.val()[uid];
-                  let leave = new LeaveStruct();
-                  leave.date       = Number(event.key), // Get the timestamp
-                  leave.approved   = tempObject.approved,
-                  leave.rejected   = tempObject.rejected,
-                  leave.revoked    = tempObject.revoked,
-                  leave.reason     = tempObject.reason,
-                  leave.uid        = uid;
-                  if(leave.revoked === true) {
-                    console.log("Publishing admin:leave:changed for revoked true:"+JSON.stringify(leave));
-                    this.events.publish("admin:leave:changed", leave);
-                  } else {
-                    console.log("Publishing admin:leave:changed for revoked false:"+JSON.stringify(leave));
-                    this.events.publish("admin:leave:removed", leave);
-                  }
+                let leave = new LeaveStruct();
+                leave.date       = Number(event.key), // Get the timestamp
+                leave.approved   = tempObject.approved,
+                leave.rejected   = tempObject.rejected,
+                leave.revoked    = tempObject.revoked,
+                leave.reason     = tempObject.reason,
+                leave.uid        = uid;
+                if(leave.revoked === true) {
+                  console.log("Publishing admin:leave:changed for revoked true:"+JSON.stringify(leave));
+                  this.events.publish("admin:leave:changed", leave);
+                } else {
+                  console.log("Publishing admin:leave:removed for revoked false:"+JSON.stringify(leave));
+                  this.events.publish("admin:leave:removed", leave);
+                }
               });
             }
           });
         }
+      break;
+      
+      case Constants.FILTER_TYPES.pendingFilter:
+        this.firebaseService.getDb().ref("users").on("child_added", (event) => {
+            if(event != null) {
+              console.log("Pending users:"+JSON.stringify(event.val())+", ref:"+event.ref);
+              Object.keys(event.val().leaves).forEach((date) => {
+                if(event.val().leaves[date] === false) {
+                  this.firebaseService.getDb().ref("leaves/"+date+"/"+event.key).once("value", (event) => {
+                    let tempObject = event.val();
+                    if(tempObject != null) {
+                      let leave = new LeaveStruct();
+                      leave.date = Number(date);
+                      leave.approved = tempObject.approved;
+                      leave.rejected = tempObject.rejected;
+                      leave.revoked  = tempObject.revoked;
+                      leave.reason   = tempObject.reason;
+                      leave.uid      = event.key;
+                      console.log("Publishing admin:leave:added for pending true:"+JSON.stringify(leave));
+                      this.events.publish("admin:leave:added", leave);
+                    }
+                  });
+                }
+              });
+            }
+          });
+          
+          this.firebaseService.getDb().ref("users").on("child_changed", (userNode) => {
+            if(userNode != null) {
+              Object.keys(userNode.val().leaves).forEach((date) => {
+                this.firebaseService.getDb().ref("leaves/"+date+"/"+userNode.key).once("value", (event) => {
+                  let leave = new LeaveStruct();
+                  let tempObject = event.val();
+                  if(tempObject != null) {
+                    leave.date = Number(date);
+                    leave.approved = tempObject.approved;
+                    leave.rejected = tempObject.rejected;
+                    leave.revoked  = tempObject.revoked;
+                    leave.reason   = tempObject.reason;
+                    leave.uid      = event.key;
+                    if(userNode.val().leaves[date] === true) {
+                      console.log("Publishing admin:leave:changed for pending true:"+JSON.stringify(leave));
+                      this.events.publish("admin:leave:removed", leave);
+                    }
+                    else {
+                      console.log("Publishing admin:leave:changed for pending true:"+JSON.stringify(leave));
+                      this.events.publish("admin:leave:added", leave);
+                    }
+                  }
+                  else {
+                    console.log("Data corruption: Uid:"+userNode.key+", timestamp:"+date+" could not be found under leaves tree.");
+                  }
+                });
+              });
+            }
+          });
       break;
       
       case Constants.FILTER_TYPES.nameFilter:
@@ -280,6 +336,7 @@ export class FirebaseServiceAdmin {
   
   public unregisterLeaveEvents(): void {
     this.firebaseService.getDb().ref("leaves").off();
+    this.firebaseService.getDb().ref("users").off();
     this.firebaseService.getDb().ref().off();
   }
   
