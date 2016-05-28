@@ -16,12 +16,12 @@ export class FirebaseServiceAdmin {
   constructor(private events: Events, private firebaseService: FirebaseService) {}
 
   public registerForNamelistEvents(): void {
-    this.firebaseService.getRefToBaseUrl().child("namelist").off();
-    this.firebaseService.getRefToBaseUrl().child("namelist").orderByChild("name").on("child_added", (data) => {
+    this.firebaseService.getDb().ref("namelist").off();
+    this.firebaseService.getDb().ref("namelist").orderByChild("name").on("child_added", (data) => {
       let user: {uid: string, name: string, username: string};
-      console.log("Uid:"+data.ref().key());
+      console.log("Uid:"+data.ref.key);
       user = {
-        uid: data.ref().key(),
+        uid: data.ref.key,
         name: data.val().name,
         username: data.val().username
       }
@@ -29,11 +29,11 @@ export class FirebaseServiceAdmin {
       this.events.publish("admin:name:added", user);
     });
     
-    this.firebaseService.getRefToBaseUrl().child("namelist").on("child_changed", (data) => {
+    this.firebaseService.getDb().ref("namelist").on("child_changed", (data) => {
       let user: {uid: string, name: string, username: string};
-      console.log("Uid:"+data.ref().key());
+      console.log("Uid:"+data.ref.key);
       user = {
-        uid: data.ref().key(),
+        uid: data.ref.key,
         name: data.val().name,
         username: data.val().username
       }
@@ -46,12 +46,12 @@ export class FirebaseServiceAdmin {
     switch (filter.by) {
       case Constants.FILTER_TYPES.dateFilter:
         if(filter.info.length == 2) {
-          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_added", (event) => {
+          this.firebaseService.getDb().ref("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_added", (event) => {
             if(event != null) {
               Object.keys(event.val()).forEach((uid) => {
                 let leave = new LeaveStruct();
                 let tempObject   = event.val()[uid];
-                leave.date       = Number(event.key()); // Get the timestamp
+                leave.date       = Number(event.key); // Get the timestamp
                 leave.approved   = tempObject.approved;
                 leave.rejected   = tempObject.rejected;
                 leave.revoked    = tempObject.revoked;
@@ -63,12 +63,12 @@ export class FirebaseServiceAdmin {
             }
           });
           
-          this.firebaseService.getRefToBaseUrl().child("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_changed", (event) => {
+          this.firebaseService.getDb().ref("leaves").orderByKey().startAt(filter.info[0]).endAt(filter.info[1]).on("child_changed", (event) => {
             if(event != null) {
               Object.keys(event.val()).forEach((uid) => {
                 let leave = new LeaveStruct();
                 let tempObject = event.val()[uid];
-                leave.date       = Number(event.key()), // Get the timestamp
+                leave.date       = Number(event.key), // Get the timestamp
                 leave.approved   = tempObject.approved,
                 leave.rejected   = tempObject.rejected,
                 leave.revoked    = tempObject.revoked,
@@ -85,13 +85,13 @@ export class FirebaseServiceAdmin {
       case Constants.FILTER_TYPES.approvedFilter:
         filter.info.forEach((uid:string) => {
           if(uid != null && uid.length > 0) {
-            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/approved").equalTo(true).on("child_added", (event) => {
+            this.firebaseService.getDb().ref("leaves").orderByChild(uid+"/approved").equalTo(true).on("child_added", (event) => {
               if(event != null) {
                 Object.keys(event.val()).forEach((uid) => {
                   let tempObject   = event.val()[uid];
                   if(tempObject.approved === true) { // Might not be true for all childred
                     let leave = new LeaveStruct();
-                    leave.date       = Number(event.key()); // Get the timestamp
+                    leave.date       = Number(event.key); // Get the timestamp
                     leave.approved   = tempObject.approved;
                     leave.rejected   = tempObject.rejected;
                     leave.revoked    = tempObject.revoked;
@@ -106,25 +106,25 @@ export class FirebaseServiceAdmin {
           }
         });
         if(filter.info.length > 0) {
-          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+          this.firebaseService.getDb().ref("leaves").on("child_changed", (event) => {
             if(event != null) {
               console.log("Received event:"+event.val());
               Object.keys(event.val()).forEach((uid) => {
                 let tempObject   = event.val()[uid];
-                  let leave = new LeaveStruct();
-                  leave.date       = Number(event.key()), // Get the timestamp
-                  leave.approved   = tempObject.approved,
-                  leave.rejected   = tempObject.rejected,
-                  leave.revoked    = tempObject.revoked,
-                  leave.reason     = tempObject.reason,
-                  leave.uid        = uid;
-                  if(leave.approved === true) {
-                    console.log("Publishing admin:leave:added for approved true:"+JSON.stringify(leave));
-                    this.events.publish("admin:leave:added", leave);
-                  } else {
-                    console.log("ublishing admin:leave:removed for approved false:"+JSON.stringify(leave));
-                    this.events.publish("admin:leave:removed", leave);
-                  }
+                let leave = new LeaveStruct();
+                leave.date       = Number(event.key), // Get the timestamp
+                leave.approved   = tempObject.approved,
+                leave.rejected   = tempObject.rejected,
+                leave.revoked    = tempObject.revoked,
+                leave.reason     = tempObject.reason,
+                leave.uid        = uid;
+                if(leave.approved === true) {
+                  console.log("Publishing admin:leave:added for approved true:"+JSON.stringify(leave));
+                  this.events.publish("admin:leave:added", leave);
+                } else {
+                  console.log("Publishing admin:leave:removed for approved false:"+JSON.stringify(leave));
+                  this.events.publish("admin:leave:removed", leave);
+                }
               });
             }
           });
@@ -134,13 +134,13 @@ export class FirebaseServiceAdmin {
       case Constants.FILTER_TYPES.rejectedFilter:
         filter.info.forEach((uid:string) => {
           if(uid != null && uid.length > 0) {
-            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/rejected").equalTo(true).on("child_added", (event) => {
+            this.firebaseService.getDb().ref("leaves").orderByChild(uid+"/rejected").equalTo(true).on("child_added", (event) => {
               if(event != null) {
                 Object.keys(event.val()).forEach((uid) => {
                   let tempObject   = event.val()[uid];
                   if(tempObject.rejected === true) { // Might not be true for all childred
                     let leave = new LeaveStruct();
-                    leave.date       = Number(event.key()); // Get the timestamp
+                    leave.date       = Number(event.key); // Get the timestamp
                     leave.approved   = tempObject.approved;
                     leave.rejected   = tempObject.rejected;
                     leave.revoked    = tempObject.revoked;
@@ -155,12 +155,12 @@ export class FirebaseServiceAdmin {
           }
         });
         if(filter.info.length > 0) {
-          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+          this.firebaseService.getDb().ref("leaves").on("child_changed", (event) => {
             if(event != null) {
               Object.keys(event.val()).forEach((uid) => {
                 let tempObject   = event.val()[uid];
                   let leave = new LeaveStruct();
-                  leave.date       = Number(event.key()), // Get the timestamp
+                  leave.date       = Number(event.key), // Get the timestamp
                   leave.approved   = tempObject.approved,
                   leave.rejected   = tempObject.rejected,
                   leave.revoked    = tempObject.revoked,
@@ -182,13 +182,13 @@ export class FirebaseServiceAdmin {
       case Constants.FILTER_TYPES.revokedFilter:
         filter.info.forEach((uid:string) => {
           if(uid != null && uid.length > 0) {
-            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid+"/revoked").equalTo(true).on("child_added", (event) => {
+            this.firebaseService.getDb().ref("leaves").orderByChild(uid+"/revoked").equalTo(true).on("child_added", (event) => {
               if(event != null) {
                 Object.keys(event.val()).forEach((uid) => {
                   let tempObject   = event.val()[uid];
                   if(tempObject.revoked === true) { // Might not be true for all childred
                     let leave = new LeaveStruct();
-                    leave.date       = Number(event.key()); // Get the timestamp
+                    leave.date       = Number(event.key); // Get the timestamp
                     leave.approved   = tempObject.approved;
                     leave.rejected   = tempObject.rejected;
                     leave.revoked    = tempObject.revoked;
@@ -204,12 +204,12 @@ export class FirebaseServiceAdmin {
         });
         
         if(filter.info.length > 0) {
-          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+          this.firebaseService.getDb().ref("leaves").on("child_changed", (event) => {
             if(event != null) {
               Object.keys(event.val()).forEach((uid) => {
                 let tempObject   = event.val()[uid];
                   let leave = new LeaveStruct();
-                  leave.date       = Number(event.key()), // Get the timestamp
+                  leave.date       = Number(event.key), // Get the timestamp
                   leave.approved   = tempObject.approved,
                   leave.rejected   = tempObject.rejected,
                   leave.revoked    = tempObject.revoked,
@@ -231,13 +231,13 @@ export class FirebaseServiceAdmin {
       case Constants.FILTER_TYPES.nameFilter:
         filter.info.forEach((uid:string) => {
           if(uid != null && uid.length > 0) {
-            this.firebaseService.getRefToBaseUrl().child("leaves").orderByChild(uid).on("child_added", (event) => {
+            this.firebaseService.getDb().ref("leaves").orderByChild(uid).on("child_added", (event) => {
               if(event != null) {
                 Object.keys(event.val()).forEach((uid) => {
                   if(filter.info.indexOf(uid) > -1) {
                     let tempObject   = event.val()[uid];
                     let leave = new LeaveStruct();
-                    leave.date       = Number(event.key());
+                    leave.date       = Number(event.key);
                     leave.approved   = tempObject.approved;
                     leave.rejected   = tempObject.rejected;
                     leave.revoked    = tempObject.revoked;
@@ -252,13 +252,13 @@ export class FirebaseServiceAdmin {
           }
         });
         if(filter.info.length > 0) {
-          this.firebaseService.getRefToBaseUrl().child("leaves").on("child_changed", (event) => {
+          this.firebaseService.getDb().ref("leaves").on("child_changed", (event) => {
             if(event != null) {
               Object.keys(event.val()).forEach((uid) => {
                 if(filter.info.indexOf(uid) > -1) {
                   let tempObject   = event.val()[uid];
                   let leave = new LeaveStruct();
-                  leave.date       = Number(event.key()), // Get the timestamp
+                  leave.date       = Number(event.key), // Get the timestamp
                   leave.approved   = tempObject.approved,
                   leave.rejected   = tempObject.rejected,
                   leave.revoked    = tempObject.revoked,
@@ -279,27 +279,28 @@ export class FirebaseServiceAdmin {
   }
   
   public unregisterLeaveEvents(): void {
-    this.firebaseService.getRefToBaseUrl().child("leaves").off();
+    this.firebaseService.getDb().ref("leaves").off();
+    this.firebaseService.getDb().ref().off();
   }
   
   public approveLeave(leave: LeaveStruct): void {
     let leaveChangelist = {};
     leaveChangelist[leave.date+"/"+leave.uid+"/approved"] = true;
     leaveChangelist[leave.date+"/"+leave.uid+"/rejected"] = false;
-    this.firebaseService.getRefToBaseUrl().child("leaves").update(leaveChangelist);
+    this.firebaseService.getDb().ref("leaves").update(leaveChangelist);
     let userChangelist = {};
     userChangelist[leave.date] = true;
-    this.firebaseService.getRefToBaseUrl().child("users/"+leave.uid+"/leaves").update(userChangelist);
+    this.firebaseService.getDb().ref("users/"+leave.uid+"/leaves").update(userChangelist);
   }
   
   public rejectLeave(leave: LeaveStruct): void {
     let changelist = {};
     changelist[leave.date+"/"+leave.uid+"/approved"] = false;
     changelist[leave.date+"/"+leave.uid+"/rejected"] = true;
-    this.firebaseService.getRefToBaseUrl().child("leaves").update(changelist);
+    this.firebaseService.getDb().ref("leaves").update(changelist);
     let userChangelist = {};
     userChangelist[leave.date] = true;
-    this.firebaseService.getRefToBaseUrl().child("users/"+leave.uid+"/leaves").update(userChangelist);
+    this.firebaseService.getDb().ref("users/"+leave.uid+"/leaves").update(userChangelist);
   }
 }
 

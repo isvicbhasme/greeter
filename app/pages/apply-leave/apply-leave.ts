@@ -97,7 +97,7 @@ export class ApplyLeavePage  {
   }
   
   public logout() {
-    this.firebaseService.getRefToBaseUrl().unauth();
+    this.firebaseService.logout();
   }
   
   private addNewLeaveToList() {

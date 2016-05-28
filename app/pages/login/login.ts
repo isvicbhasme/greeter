@@ -39,25 +39,28 @@ export class LoginPage  {
     this.submitButtonText = "Please wait..."
     this.isAuthOngoing = true;
     if(this.authForm.valid) {
-      let ref = this.firebaseService.getRefToBaseUrl();
-      ref.authWithPassword({
-        email: this.email.value,
-        password: this.password.value
-      }, (error, data) => this.authHandler(error, data)
-      );
-    }
-  }
-  
-  public authHandler(error, authData) {
-    this.submitButtonText = "Login";
-    this.isAuthOngoing = false;
-    if(error) {
-      switch(error.code) {
-        case "INVALID_EMAIL": this.showToast("Incorrect email. Please try again."); break;
-        case "INVALID_PASSWORD": this.showToast("Incorrect password. Please try again"); break;
-        case "INVALID_CREDENTIALS": this.showToast("Please enter valid credentials"); break;
-      }
-      console.log("Authentication failed: "+JSON.stringify(error));
+      let auth = firebase.auth();
+      auth.signInWithEmailAndPassword(this.email.value, this.password.value)
+      .then((user) => {
+        this.submitButtonText = "Login";
+        this.isAuthOngoing = false;
+        if(user) {
+          console.log("User logged in");
+        } else {
+          console.log("Could not log in");
+        }
+      }, (error) => {
+        this.submitButtonText = "Login";
+        this.isAuthOngoing = false;
+        if(error) {
+          switch(error.code) {
+            case "auth/invalid-email": this.showToast("Incorrect email. Please try again."); break;
+            case "auth/wrong-password": this.showToast("Incorrect password. Please try again"); break;
+            default: this.showToast("Please enter valid credentials"); break;
+          }
+          console.log("Authentication failed: "+error.code+", msg:"+error.message);
+        }
+      });
     }
   }
   

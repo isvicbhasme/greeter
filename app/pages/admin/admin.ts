@@ -231,7 +231,7 @@ export class AdminPage {
   }
   
   public logout() {
-    this.firebaseService.getRefToBaseUrl().unauth();
+    this.firebaseService.logout();
   }
   
   public approveLeave(leave: LeaveStruct) {
